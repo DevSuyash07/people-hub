@@ -8,6 +8,8 @@ import {
   LogOut,
   Settings,
   Sparkles,
+  Clock,
+  CalendarDays,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReactNode } from "react";
@@ -17,6 +19,8 @@ const navByRole = {
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/employees", label: "Employees", icon: Users },
     { to: "/departments", label: "Departments", icon: Building2 },
+    { to: "/attendance", label: "Attendance", icon: Clock },
+    { to: "/leave", label: "Leave", icon: CalendarDays },
     { to: "/profile", label: "My Profile", icon: UserCircle },
     { to: "/settings", label: "Settings", icon: Settings },
   ],
@@ -24,10 +28,14 @@ const navByRole = {
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/employees", label: "Employees", icon: Users },
     { to: "/departments", label: "Departments", icon: Building2 },
+    { to: "/attendance", label: "Attendance", icon: Clock },
+    { to: "/leave", label: "Leave", icon: CalendarDays },
     { to: "/profile", label: "My Profile", icon: UserCircle },
   ],
   employee: [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/attendance", label: "Attendance", icon: Clock },
+    { to: "/leave", label: "Leave", icon: CalendarDays },
     { to: "/profile", label: "My Profile", icon: UserCircle },
   ],
 } as const;
