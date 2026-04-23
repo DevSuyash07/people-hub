@@ -60,7 +60,7 @@ export default function Settings() {
   }
 
   async function revoke(userId: string, r: string) {
-    const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", r);
+    const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", r as "admin" | "hr" | "employee");
     if (error) return toast.error(error.message);
     toast.success("Role removed");
     load();
