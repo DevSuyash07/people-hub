@@ -52,7 +52,7 @@ export default function Settings() {
     if (!target) return toast.error("No user found with that email. They must sign up first.");
     const { error } = await supabase
       .from("user_roles")
-      .insert({ user_id: target.user_id, role });
+      .insert({ user_id: target.user_id, role: role as "admin" | "hr" | "employee" });
     if (error && !error.message.includes("duplicate")) return toast.error(error.message);
     toast.success(`Granted ${role} to ${target.email}`);
     setEmail("");
