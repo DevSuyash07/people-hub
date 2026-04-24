@@ -10,6 +10,8 @@ import {
   Sparkles,
   Clock,
   CalendarDays,
+  CalendarRange,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReactNode } from "react";
@@ -21,6 +23,8 @@ const navByRole = {
     { to: "/departments", label: "Departments", icon: Building2 },
     { to: "/attendance", label: "Attendance", icon: Clock },
     { to: "/leave", label: "Leave", icon: CalendarDays },
+    { to: "/calendar", label: "Calendar", icon: CalendarRange },
+    { to: "/reports", label: "Reports", icon: BarChart3 },
     { to: "/profile", label: "My Profile", icon: UserCircle },
     { to: "/settings", label: "Settings", icon: Settings },
   ],
@@ -30,12 +34,15 @@ const navByRole = {
     { to: "/departments", label: "Departments", icon: Building2 },
     { to: "/attendance", label: "Attendance", icon: Clock },
     { to: "/leave", label: "Leave", icon: CalendarDays },
+    { to: "/calendar", label: "Calendar", icon: CalendarRange },
+    { to: "/reports", label: "Reports", icon: BarChart3 },
     { to: "/profile", label: "My Profile", icon: UserCircle },
   ],
   employee: [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/attendance", label: "Attendance", icon: Clock },
     { to: "/leave", label: "Leave", icon: CalendarDays },
+    { to: "/calendar", label: "Calendar", icon: CalendarRange },
     { to: "/profile", label: "My Profile", icon: UserCircle },
   ],
 } as const;
