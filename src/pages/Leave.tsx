@@ -35,7 +35,8 @@ export default function Leave() {
   const [balances, setBalances] = useState<Balance[]>([]);
   const [open, setOpen] = useState(false);
 
-  useEffect(() => { document.title = "Leave · Atrium HR"; if (user) load(); }, [user, role]);
+  const isAdmin = role === "admin";
+  useEffect(() => { document.title = "Leave · Digi Captain CRM"; if (user) load(); }, [user, role]);
 
   async function load() {
     const { data: emp } = await supabase.from("employees").select("id").eq("user_id", user!.id).maybeSingle();
@@ -92,7 +93,7 @@ export default function Leave() {
         title="Time away"
         description="Request, track, and manage time off."
         actions={
-          me && (
+          me && !isAdmin && (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button><Plus className="h-4 w-4" /> Request leave</Button>
