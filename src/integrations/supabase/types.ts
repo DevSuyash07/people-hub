@@ -58,6 +58,48 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          event_date: string
+          event_type: Database["public"]["Enums"]["event_type"]
+          id: string
+          is_company_wide: boolean
+          location: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_date: string
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          is_company_wide?: boolean
+          location?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_date?: string
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          is_company_wide?: boolean
+          location?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       departments: {
         Row: {
           created_at: string
@@ -159,6 +201,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      holidays: {
+        Row: {
+          created_at: string
+          description: string | null
+          holiday_date: string
+          id: string
+          is_recurring: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          holiday_date: string
+          id?: string
+          is_recurring?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          holiday_date?: string
+          id?: string
+          is_recurring?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       leave_balances: {
         Row: {
@@ -344,6 +416,12 @@ export type Database = {
       attendance_status: "present" | "absent" | "late" | "half_day" | "on_leave"
       employee_status: "active" | "inactive" | "terminated"
       employment_type: "full_time" | "part_time" | "contract" | "intern"
+      event_type:
+        | "meeting"
+        | "training"
+        | "celebration"
+        | "announcement"
+        | "other"
       leave_status: "pending" | "approved" | "rejected" | "cancelled"
     }
     CompositeTypes: {
@@ -476,6 +554,13 @@ export const Constants = {
       attendance_status: ["present", "absent", "late", "half_day", "on_leave"],
       employee_status: ["active", "inactive", "terminated"],
       employment_type: ["full_time", "part_time", "contract", "intern"],
+      event_type: [
+        "meeting",
+        "training",
+        "celebration",
+        "announcement",
+        "other",
+      ],
       leave_status: ["pending", "approved", "rejected", "cancelled"],
     },
   },
