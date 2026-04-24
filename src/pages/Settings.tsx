@@ -4,12 +4,13 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Shield, Trash2 } from "lucide-react";
+import { Shield, Trash2, UserPlus } from "lucide-react";
 
 interface UserWithRole {
   user_id: string;
@@ -18,19 +19,34 @@ interface UserWithRole {
   roles: string[];
 }
 
+interface Department { id: string; name: string }
+
 export default function Settings() {
   const [list, setList] = useState<UserWithRole[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"admin" | "hr" | "employee">("hr");
 
-  useEffect(() => { document.title = "Settings · Atrium HR"; load(); }, []);
+  // Create-user form (admin only)
+  const [cuOpen, setCuOpen] = useState(false);
+  const [cuName, setCuName] = useState("");
+  const [cuEmail, setCuEmail] = useState("");
+  const [cuPassword, setCuPassword] = useState("");
+  const [cuRole, setCuRole] = useState<"hr" | "employee">("hr");
+  const [cuPhone, setCuPhone] = useState("");
+  const [cuDesignation, setCuDesignation] = useState("");
+  const [cuDept, setCuDept] = useState<string>("");
+  const [cuSaving, setCuSaving] = useState(false);
+
+  useEffect(() => { document.title = "Settings · Digi Captain CRM"; load(); }, []);
 
   async function load() {
-    const { data: emps } = await supabase
-      .from("employees")
-      .select("user_id, email, full_name")
-      .not("user_id", "is", null);
-    const { data: roles } = await supabase.from("user_roles").select("user_id, role");
+    const [{ data: emps }, { data: roles }, { data: depts }] = await Promise.all([
+      supabase.from("employees").select("user_id, email, full_name").not("user_id", "is", null),
+      supabase.from("user_roles").select("user_id, role"),
+      supabase.from("departments").select("id, name").order("name"),
+    ]);
+    setDepartments((depts ?? []) as Department[]);
     const byUser = new Map<string, string[]>();
     (roles ?? []).forEach((r: any) => {
       const arr = byUser.get(r.user_id) ?? [];
@@ -45,6 +61,32 @@ export default function Settings() {
         roles: byUser.get(e.user_id) ?? [],
       })),
     );
+  }
+
+  async function createUser() {
+    if (!cuName.trim() || !cuEmail.trim() || cuPassword.length < 8) {
+      return toast.error("Name, email and password (8+ chars) are required");
+    }
+    setCuSaving(true);
+    const { data, error } = await supabase.functions.invoke("admin-create-user", {
+      body: {
+        full_name: cuName.trim(),
+        email: cuEmail.trim().toLowerCase(),
+        password: cuPassword,
+        role: cuRole,
+        phone: cuPhone || undefined,
+        designation: cuDesignation || undefined,
+        department_id: cuDept || undefined,
+      },
+    });
+    setCuSaving(false);
+    if (error || (data as any)?.error) {
+      return toast.error((data as any)?.error ?? error?.message ?? "Failed to create user");
+    }
+    toast.success(`${cuRole === "hr" ? "HR" : "Employee"} account created`);
+    setCuName(""); setCuEmail(""); setCuPassword(""); setCuPhone(""); setCuDesignation(""); setCuDept("");
+    setCuOpen(false);
+    load();
   }
 
   async function assign() {
