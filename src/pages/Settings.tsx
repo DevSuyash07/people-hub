@@ -112,9 +112,72 @@ export default function Settings() {
     <AppLayout>
       <PageHeader
         eyebrow="Administrator"
-        title="Roles & access"
-        description="Grant Admin or HR powers to existing users. Everyone starts as an Employee."
+        title="Users & access"
+        description="Create new HR or Employee accounts and manage role assignments."
+        actions={
+          <Button onClick={() => setCuOpen((v) => !v)} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <UserPlus className="h-4 w-4 mr-2" /> {cuOpen ? "Close" : "Create user"}
+          </Button>
+        }
       />
+
+      {cuOpen && (
+        <div className="surface-card p-6 mb-8">
+          <h3 className="text-xl mb-1">Create new account</h3>
+          <p className="text-xs text-muted-foreground mb-5">
+            The user can sign in immediately with the email and password you set below.
+          </p>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Full name *</Label>
+              <Input value={cuName} onChange={(e) => setCuName(e.target.value)} placeholder="Jane Doe" maxLength={100} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Email *</Label>
+              <Input type="email" value={cuEmail} onChange={(e) => setCuEmail(e.target.value)} placeholder="jane@company.com" maxLength={255} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Password * <span className="text-muted-foreground font-normal">(8+ chars)</span></Label>
+              <Input type="password" value={cuPassword} onChange={(e) => setCuPassword(e.target.value)} placeholder="••••••••" minLength={8} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Role *</Label>
+              <Select value={cuRole} onValueChange={(v: any) => setCuRole(v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="hr">HR — manage people</SelectItem>
+                  <SelectItem value="employee">Employee — own data</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Phone</Label>
+              <Input value={cuPhone} onChange={(e) => setCuPhone(e.target.value)} placeholder="+91…" maxLength={20} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Designation</Label>
+              <Input value={cuDesignation} onChange={(e) => setCuDesignation(e.target.value)} placeholder="HR Manager" maxLength={100} />
+            </div>
+            <div className="space-y-1.5 md:col-span-2">
+              <Label>Department</Label>
+              <Select value={cuDept} onValueChange={setCuDept}>
+                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+                <SelectContent>
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex gap-2 mt-6">
+            <Button onClick={createUser} disabled={cuSaving} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+              {cuSaving ? "Creating…" : `Create ${cuRole === "hr" ? "HR" : "Employee"} account`}
+            </Button>
+            <Button variant="ghost" onClick={() => setCuOpen(false)}>Cancel</Button>
+          </div>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="surface-card p-6 lg:col-span-1 h-fit">
