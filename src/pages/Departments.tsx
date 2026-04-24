@@ -20,7 +20,7 @@ export default function Departments() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
-  useEffect(() => { document.title = "Departments · Atrium HR"; load(); }, []);
+  useEffect(() => { document.title = "Departments · Digi Captain CRM"; load(); }, []);
 
   async function load() {
     const { data: depts } = await supabase.from("departments").select("*").order("name");

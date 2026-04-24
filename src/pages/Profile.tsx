@@ -18,7 +18,7 @@ export default function Profile() {
     emergency_contact_name: "", emergency_contact_phone: "",
   });
 
-  useEffect(() => { document.title = "My Profile · Atrium HR"; load(); }, [user]);
+  useEffect(() => { document.title = "My Profile · Digi Captain CRM"; load(); }, [user]);
 
   async function load() {
     if (!user) return;

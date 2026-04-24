@@ -7,7 +7,6 @@ import {
   UserCircle,
   LogOut,
   Settings,
-  Sparkles,
   Clock,
   CalendarDays,
   CalendarRange,
@@ -15,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReactNode } from "react";
+import logo from "@/assets/logo.svg";
 
 const navByRole = {
   admin: [
@@ -57,14 +57,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <aside className="hidden md:flex w-64 flex-col border-r border-sidebar-border bg-sidebar">
         <div className="px-6 py-6 border-b border-sidebar-border">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center">
-              <Sparkles className="h-4 w-4 text-primary-foreground" />
-            </div>
+          <div className="flex items-center gap-2.5">
+            <img src={logo} alt="Digi Captain CRM" className="h-9 w-9 rounded-md" />
             <div>
-              <div className="font-display text-lg leading-none">Atrium</div>
+              <div className="font-display text-lg leading-none text-primary">Digi Captain</div>
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">
-                HR Suite
+                CRM Suite
               </div>
             </div>
           </div>
@@ -114,10 +112,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <div className="md:hidden fixed top-0 inset-x-0 z-30 border-b border-border bg-background/80 backdrop-blur">
         <div className="flex items-center justify-between px-4 h-14">
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
-              <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
-            </div>
-            <span className="font-display text-lg">Atrium</span>
+            <img src={logo} alt="Digi Captain CRM" className="h-7 w-7 rounded-md" />
+            <span className="font-display text-lg text-primary">Digi Captain</span>
           </div>
           <Button variant="ghost" size="sm" onClick={signOut}>
             <LogOut className="h-4 w-4" />

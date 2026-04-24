@@ -19,7 +19,7 @@ export default function Dashboard() {
   const [me, setMe] = useState<any>(null);
 
   useEffect(() => {
-    document.title = "Dashboard · Atrium HR";
+    document.title = "Dashboard · Digi Captain CRM";
     load();
   }, [user, role]);
 

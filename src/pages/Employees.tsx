@@ -38,7 +38,7 @@ export default function Employees() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
 
-  useEffect(() => { document.title = "Employees · Atrium HR"; load(); }, []);
+  useEffect(() => { document.title = "Employees · Digi Captain CRM"; load(); }, []);
 
   async function load() {
     const [{ data: emps }, { data: depts }] = await Promise.all([

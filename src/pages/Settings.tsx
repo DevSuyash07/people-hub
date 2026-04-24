@@ -4,12 +4,13 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Shield, Trash2 } from "lucide-react";
+import { Shield, Trash2, UserPlus } from "lucide-react";
 
 interface UserWithRole {
   user_id: string;
@@ -18,19 +19,34 @@ interface UserWithRole {
   roles: string[];
 }
 
+interface Department { id: string; name: string }
+
 export default function Settings() {
   const [list, setList] = useState<UserWithRole[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"admin" | "hr" | "employee">("hr");
 
-  useEffect(() => { document.title = "Settings · Atrium HR"; load(); }, []);
+  // Create-user form (admin only)
+  const [cuOpen, setCuOpen] = useState(false);
+  const [cuName, setCuName] = useState("");
+  const [cuEmail, setCuEmail] = useState("");
+  const [cuPassword, setCuPassword] = useState("");
+  const [cuRole, setCuRole] = useState<"hr" | "employee">("hr");
+  const [cuPhone, setCuPhone] = useState("");
+  const [cuDesignation, setCuDesignation] = useState("");
+  const [cuDept, setCuDept] = useState<string>("");
+  const [cuSaving, setCuSaving] = useState(false);
+
+  useEffect(() => { document.title = "Settings · Digi Captain CRM"; load(); }, []);
 
   async function load() {
-    const { data: emps } = await supabase
-      .from("employees")
-      .select("user_id, email, full_name")
-      .not("user_id", "is", null);
-    const { data: roles } = await supabase.from("user_roles").select("user_id, role");
+    const [{ data: emps }, { data: roles }, { data: depts }] = await Promise.all([
+      supabase.from("employees").select("user_id, email, full_name").not("user_id", "is", null),
+      supabase.from("user_roles").select("user_id, role"),
+      supabase.from("departments").select("id, name").order("name"),
+    ]);
+    setDepartments((depts ?? []) as Department[]);
     const byUser = new Map<string, string[]>();
     (roles ?? []).forEach((r: any) => {
       const arr = byUser.get(r.user_id) ?? [];
@@ -45,6 +61,32 @@ export default function Settings() {
         roles: byUser.get(e.user_id) ?? [],
       })),
     );
+  }
+
+  async function createUser() {
+    if (!cuName.trim() || !cuEmail.trim() || cuPassword.length < 8) {
+      return toast.error("Name, email and password (8+ chars) are required");
+    }
+    setCuSaving(true);
+    const { data, error } = await supabase.functions.invoke("admin-create-user", {
+      body: {
+        full_name: cuName.trim(),
+        email: cuEmail.trim().toLowerCase(),
+        password: cuPassword,
+        role: cuRole,
+        phone: cuPhone || undefined,
+        designation: cuDesignation || undefined,
+        department_id: cuDept || undefined,
+      },
+    });
+    setCuSaving(false);
+    if (error || (data as any)?.error) {
+      return toast.error((data as any)?.error ?? error?.message ?? "Failed to create user");
+    }
+    toast.success(`${cuRole === "hr" ? "HR" : "Employee"} account created`);
+    setCuName(""); setCuEmail(""); setCuPassword(""); setCuPhone(""); setCuDesignation(""); setCuDept("");
+    setCuOpen(false);
+    load();
   }
 
   async function assign() {
@@ -70,9 +112,72 @@ export default function Settings() {
     <AppLayout>
       <PageHeader
         eyebrow="Administrator"
-        title="Roles & access"
-        description="Grant Admin or HR powers to existing users. Everyone starts as an Employee."
+        title="Users & access"
+        description="Create new HR or Employee accounts and manage role assignments."
+        actions={
+          <Button onClick={() => setCuOpen((v) => !v)} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <UserPlus className="h-4 w-4 mr-2" /> {cuOpen ? "Close" : "Create user"}
+          </Button>
+        }
       />
+
+      {cuOpen && (
+        <div className="surface-card p-6 mb-8">
+          <h3 className="text-xl mb-1">Create new account</h3>
+          <p className="text-xs text-muted-foreground mb-5">
+            The user can sign in immediately with the email and password you set below.
+          </p>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Full name *</Label>
+              <Input value={cuName} onChange={(e) => setCuName(e.target.value)} placeholder="Jane Doe" maxLength={100} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Email *</Label>
+              <Input type="email" value={cuEmail} onChange={(e) => setCuEmail(e.target.value)} placeholder="jane@company.com" maxLength={255} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Password * <span className="text-muted-foreground font-normal">(8+ chars)</span></Label>
+              <Input type="password" value={cuPassword} onChange={(e) => setCuPassword(e.target.value)} placeholder="••••••••" minLength={8} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Role *</Label>
+              <Select value={cuRole} onValueChange={(v: any) => setCuRole(v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="hr">HR — manage people</SelectItem>
+                  <SelectItem value="employee">Employee — own data</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Phone</Label>
+              <Input value={cuPhone} onChange={(e) => setCuPhone(e.target.value)} placeholder="+91…" maxLength={20} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Designation</Label>
+              <Input value={cuDesignation} onChange={(e) => setCuDesignation(e.target.value)} placeholder="HR Manager" maxLength={100} />
+            </div>
+            <div className="space-y-1.5 md:col-span-2">
+              <Label>Department</Label>
+              <Select value={cuDept} onValueChange={setCuDept}>
+                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+                <SelectContent>
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex gap-2 mt-6">
+            <Button onClick={createUser} disabled={cuSaving} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+              {cuSaving ? "Creating…" : `Create ${cuRole === "hr" ? "HR" : "Employee"} account`}
+            </Button>
+            <Button variant="ghost" onClick={() => setCuOpen(false)}>Cancel</Button>
+          </div>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="surface-card p-6 lg:col-span-1 h-fit">
