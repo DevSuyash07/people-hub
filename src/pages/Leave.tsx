@@ -126,13 +126,15 @@ export default function Leave() {
 
       <Tabs defaultValue={isManager ? "all" : "mine"}>
         <TabsList>
-          <TabsTrigger value="mine">My requests</TabsTrigger>
+          {!isAdmin && <TabsTrigger value="mine">My requests</TabsTrigger>}
           {isManager && <TabsTrigger value="all">All requests</TabsTrigger>}
         </TabsList>
 
-        <TabsContent value="mine" className="mt-6">
-          <RequestsList rows={myRequests} onCancel={cancel} canCancel />
-        </TabsContent>
+        {!isAdmin && (
+          <TabsContent value="mine" className="mt-6">
+            <RequestsList rows={myRequests} onCancel={cancel} canCancel />
+          </TabsContent>
+        )}
 
         {isManager && (
           <TabsContent value="all" className="mt-6">

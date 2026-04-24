@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Sparkles } from "lucide-react";
+import logo from "@/assets/logo.svg";
 
 export default function Auth() {
   const { user, loading } = useAuth();
@@ -18,7 +18,7 @@ export default function Auth() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    document.title = mode === "signin" ? "Sign in · Atrium HR" : "Create account · Atrium HR";
+    document.title = mode === "signin" ? "Sign in · Digi Captain CRM" : "Create account · Digi Captain CRM";
   }, [mode]);
 
   if (!loading && user) return <Navigate to="/dashboard" replace />;
@@ -54,11 +54,9 @@ export default function Auth() {
     <div className="min-h-screen grid lg:grid-cols-2">
       {/* Left: form */}
       <div className="flex flex-col px-6 sm:px-12 py-10">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="font-display text-xl">Atrium</span>
+        <div className="flex items-center gap-2.5">
+          <img src={logo} alt="Digi Captain CRM" className="h-9 w-9 rounded-md" />
+          <span className="font-display text-xl text-primary">Digi Captain CRM</span>
         </div>
 
         <div className="flex-1 flex items-center">
@@ -152,27 +150,27 @@ export default function Auth() {
         </div>
 
         <div className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Atrium HR
+          © {new Date().getFullYear()} Digi Captain Technologies
         </div>
       </div>
 
       {/* Right: editorial panel */}
       <div className="hidden lg:flex bg-primary text-primary-foreground p-12 flex-col justify-between relative overflow-hidden">
         <div className="text-xs uppercase tracking-[0.25em] opacity-70">
-          Atrium · A quiet HR system
+          Digi Captain CRM · Built for modern teams
         </div>
 
         <div className="relative z-10">
           <div className="font-display text-6xl leading-[1.05] mb-6">
-            People work
+            Run your team
             <br />
-            <span className="italic opacity-90">deserves quiet</span>
+            <span className="italic opacity-90">with clarity</span>
             <br />
-            tools.
+            and confidence.
           </div>
           <p className="opacity-70 max-w-md">
-            One workspace for employees, HR and admins — built for small teams who
-            value clarity over noise.
+            One workspace for employees, HR and admins — built by Digi Captain
+            Technologies for teams who value structure and speed.
           </p>
         </div>
 
