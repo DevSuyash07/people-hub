@@ -30,7 +30,7 @@ export default function Attendance() {
   const todayStr = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
 
   useEffect(() => {
-    document.title = "Attendance · Atrium HR";
+    document.title = "Attendance · Digi Captain CRM";
     if (user) load();
   }, [user, role]);
 
