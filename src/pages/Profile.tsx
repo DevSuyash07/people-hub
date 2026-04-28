@@ -17,6 +17,19 @@ export default function Profile() {
     full_name: "", phone: "", date_of_birth: "", address: "",
     emergency_contact_name: "", emergency_contact_phone: "",
   });
+  const [pw, setPw] = useState({ next: "", confirm: "" });
+  const [changingPw, setChangingPw] = useState(false);
+
+  async function changePassword() {
+    if (pw.next.length < 8) return toast.error("Password must be at least 8 characters");
+    if (pw.next !== pw.confirm) return toast.error("Passwords do not match");
+    setChangingPw(true);
+    const { error } = await supabase.auth.updateUser({ password: pw.next });
+    setChangingPw(false);
+    if (error) return toast.error(error.message);
+    setPw({ next: "", confirm: "" });
+    toast.success("Password updated");
+  }
 
   useEffect(() => { document.title = "My Profile · Digi Captain CRM"; load(); }, [user]);
 
