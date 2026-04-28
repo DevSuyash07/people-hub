@@ -133,8 +133,10 @@ export default function Employees() {
 function EmployeeDialog({
   departments, employee, onSaved,
 }: { departments: Department[]; employee: Employee | null; onSaved: () => void }) {
+  const isEdit = !!employee;
   const [form, setForm] = useState({
-    full_name: "", email: "", phone: "", designation: "",
+    full_name: "", email: "", password: "", role: "employee" as "employee" | "hr",
+    phone: "", designation: "",
     department_id: "", employment_type: "full_time",
     joining_date: "", status: "active",
   });
@@ -145,6 +147,8 @@ function EmployeeDialog({
       setForm({
         full_name: employee.full_name ?? "",
         email: employee.email ?? "",
+        password: "",
+        role: "employee",
         phone: employee.phone ?? "",
         designation: employee.designation ?? "",
         department_id: employee.department_id ?? "",
@@ -153,7 +157,7 @@ function EmployeeDialog({
         status: employee.status ?? "active",
       });
     } else {
-      setForm({ full_name: "", email: "", phone: "", designation: "", department_id: "", employment_type: "full_time", joining_date: "", status: "active" });
+      setForm({ full_name: "", email: "", password: "", role: "employee", phone: "", designation: "", department_id: "", employment_type: "full_time", joining_date: "", status: "active" });
     }
   }, [employee]);
 
@@ -162,24 +166,58 @@ function EmployeeDialog({
       toast.error("Name and email are required");
       return;
     }
+    if (!isEdit && form.password.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
     setSaving(true);
     try {
-      const payload: any = {
-        full_name: form.full_name.trim(),
-        email: form.email.trim().toLowerCase(),
-        phone: form.phone || null,
-        designation: form.designation || null,
-        department_id: form.department_id || null,
-        employment_type: form.employment_type,
-        joining_date: form.joining_date || null,
-        status: form.status,
-      };
-      const { error } = employee
-        ? await supabase.from("employees").update(payload).eq("id", employee.id)
-        : await supabase.from("employees").insert(payload);
-      if (error) throw error;
-      toast.success(employee ? "Employee updated" : "Employee added");
-      onSaved();
+      if (isEdit) {
+        const payload: any = {
+          full_name: form.full_name.trim(),
+          email: form.email.trim().toLowerCase(),
+          phone: form.phone || null,
+          designation: form.designation || null,
+          department_id: form.department_id || null,
+          employment_type: form.employment_type,
+          joining_date: form.joining_date || null,
+          status: form.status,
+        };
+        const { error } = await supabase.from("employees").update(payload).eq("id", employee!.id);
+        if (error) throw error;
+        toast.success("Employee updated");
+        onSaved();
+      } else {
+        // Create a real auth user + employee row via edge function
+        const { data, error } = await supabase.functions.invoke("admin-create-user", {
+          body: {
+            full_name: form.full_name.trim(),
+            email: form.email.trim().toLowerCase(),
+            password: form.password,
+            role: form.role,
+            phone: form.phone || undefined,
+            designation: form.designation || undefined,
+            department_id: form.department_id || undefined,
+          },
+        });
+        if (error) throw error;
+        if ((data as any)?.error) throw new Error((data as any).error);
+
+        // Apply the extra fields the edge function doesn't set
+        if ((data as any)?.user_id) {
+          await supabase
+            .from("employees")
+            .update({
+              employment_type: form.employment_type,
+              joining_date: form.joining_date || null,
+              status: form.status,
+            })
+            .eq("user_id", (data as any).user_id);
+        }
+
+        toast.success(`${form.role === "hr" ? "HR user" : "Employee"} created — they can sign in now`);
+        onSaved();
+      }
     } catch (err: any) {
       toast.error(err.message ?? "Could not save");
     } finally {
