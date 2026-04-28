@@ -17,6 +17,19 @@ export default function Profile() {
     full_name: "", phone: "", date_of_birth: "", address: "",
     emergency_contact_name: "", emergency_contact_phone: "",
   });
+  const [pw, setPw] = useState({ next: "", confirm: "" });
+  const [changingPw, setChangingPw] = useState(false);
+
+  async function changePassword() {
+    if (pw.next.length < 8) return toast.error("Password must be at least 8 characters");
+    if (pw.next !== pw.confirm) return toast.error("Passwords do not match");
+    setChangingPw(true);
+    const { error } = await supabase.auth.updateUser({ password: pw.next });
+    setChangingPw(false);
+    if (error) return toast.error(error.message);
+    setPw({ next: "", confirm: "" });
+    toast.success("Password updated");
+  }
 
   useEffect(() => { document.title = "My Profile · Digi Captain CRM"; load(); }, [user]);
 
@@ -66,6 +79,7 @@ export default function Profile() {
       {loading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>
       ) : (
+        <>
         <div className="surface-card p-6 sm:p-8 max-w-2xl">
           <div className="grid sm:grid-cols-2 gap-x-6 gap-y-5">
             <div className="space-y-1.5 sm:col-span-2">
@@ -103,6 +117,29 @@ export default function Profile() {
             </Button>
           </div>
         </div>
+
+        <div className="surface-card p-6 sm:p-8 max-w-2xl mt-6">
+          <div className="mb-5">
+            <h3 className="text-lg font-semibold">Change password</h3>
+            <p className="text-sm text-muted-foreground">Use at least 8 characters.</p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-x-6 gap-y-5">
+            <div className="space-y-1.5">
+              <Label>New password</Label>
+              <Input type="password" value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Confirm new password</Label>
+              <Input type="password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} />
+            </div>
+          </div>
+          <div className="flex justify-end mt-8">
+            <Button onClick={changePassword} disabled={changingPw || !pw.next || !pw.confirm} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+              {changingPw ? "Updating…" : "Update password"}
+            </Button>
+          </div>
+        </div>
+        </>
       )}
     </AppLayout>
   );
