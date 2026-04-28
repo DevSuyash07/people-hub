@@ -208,9 +208,9 @@ function EmployeeDialog({
           await supabase
             .from("employees")
             .update({
-              employment_type: form.employment_type,
+              employment_type: form.employment_type as any,
               joining_date: form.joining_date || null,
-              status: form.status,
+              status: form.status as any,
             })
             .eq("user_id", (data as any).user_id);
         }
