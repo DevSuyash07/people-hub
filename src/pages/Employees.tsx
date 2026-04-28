@@ -239,8 +239,32 @@ function EmployeeDialog({
         </div>
         <div className="space-y-1.5">
           <Label>Email</Label>
-          <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <Input type="email" value={form.email} disabled={isEdit} onChange={(e) => setForm({ ...form, email: e.target.value })} />
         </div>
+        {!isEdit && (
+          <>
+            <div className="space-y-1.5">
+              <Label>Temporary password</Label>
+              <Input
+                type="text"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                placeholder="Min 8 characters"
+                autoComplete="new-password"
+              />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Role</Label>
+              <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as "employee" | "hr" })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="employee">Employee</SelectItem>
+                  <SelectItem value="hr">HR</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
         <div className="space-y-1.5">
           <Label>Phone</Label>
           <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
