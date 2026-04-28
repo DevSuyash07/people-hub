@@ -79,6 +79,7 @@ export default function Profile() {
       {loading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>
       ) : (
+        <>
         <div className="surface-card p-6 sm:p-8 max-w-2xl">
           <div className="grid sm:grid-cols-2 gap-x-6 gap-y-5">
             <div className="space-y-1.5 sm:col-span-2">
