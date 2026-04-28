@@ -200,7 +200,18 @@ function EmployeeDialog({
             department_id: form.department_id || undefined,
           },
         });
-        if (error) throw error;
+        if (error) {
+          // Try to extract the real error message from the function's response body
+          let detail = error.message;
+          try {
+            const ctx: any = (error as any).context;
+            if (ctx && typeof ctx.json === "function") {
+              const body = await ctx.json();
+              if (body?.error) detail = body.error;
+            }
+          } catch {}
+          throw new Error(detail);
+        }
         if ((data as any)?.error) throw new Error((data as any).error);
 
         // Apply the extra fields the edge function doesn't set
