@@ -116,6 +116,28 @@ export default function Profile() {
             </Button>
           </div>
         </div>
+
+        <div className="surface-card p-6 sm:p-8 max-w-2xl mt-6">
+          <div className="mb-5">
+            <h3 className="text-lg font-semibold">Change password</h3>
+            <p className="text-sm text-muted-foreground">Use at least 8 characters.</p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-x-6 gap-y-5">
+            <div className="space-y-1.5">
+              <Label>New password</Label>
+              <Input type="password" value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Confirm new password</Label>
+              <Input type="password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} />
+            </div>
+          </div>
+          <div className="flex justify-end mt-8">
+            <Button onClick={changePassword} disabled={changingPw || !pw.next || !pw.confirm} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+              {changingPw ? "Updating…" : "Update password"}
+            </Button>
+          </div>
+        </div>
       )}
     </AppLayout>
   );
