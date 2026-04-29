@@ -52,13 +52,57 @@ Deno.serve(async (req) => {
     if (!["hr", "employee"].includes(body.role)) return json({ error: "Invalid role" }, 400);
 
     // Create the auth user (auto-confirmed so they can sign in immediately)
-    const { data: created, error: createErr } = await admin.auth.admin.createUser({
+    let { data: created, error: createErr } = await admin.auth.admin.createUser({
       email: body.email,
       password: body.password,
       email_confirm: true,
       user_metadata: { full_name: body.full_name },
     });
-    if (createErr || !created.user) return json({ error: createErr?.message ?? "Create failed" }, 400);
+
+    // If the email is already registered, try to recover by deleting the
+    // orphaned auth user (only if they are NOT an admin) and recreating.
+    if (createErr && /already.*registered|already exists|duplicate/i.test(createErr.message)) {
+      // Find the existing user by email
+      let existingId: string | null = null;
+      let page = 1;
+      while (page < 20 && !existingId) {
+        const { data: list, error: listErr } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+        if (listErr) break;
+        const match = list.users.find((u) => (u.email ?? "").toLowerCase() === body.email.toLowerCase());
+        if (match) existingId = match.id;
+        if (!list.users.length || list.users.length < 200) break;
+        page++;
+      }
+
+      if (!existingId) return json({ error: createErr.message }, 400);
+
+      // Refuse to overwrite an admin account
+      const { data: isExistingAdmin } = await admin.rpc("has_role", {
+        _user_id: existingId,
+        _role: "admin",
+      });
+      if (isExistingAdmin) {
+        return json({ error: "This email belongs to an admin account and cannot be replaced." }, 400);
+      }
+
+      // Clean up dependent rows then delete the orphan auth user
+      await admin.from("user_roles").delete().eq("user_id", existingId);
+      await admin.from("employees").delete().eq("user_id", existingId);
+      const { error: delErr } = await admin.auth.admin.deleteUser(existingId);
+      if (delErr) return json({ error: `Could not replace existing user: ${delErr.message}` }, 400);
+
+      // Retry creation
+      const retry = await admin.auth.admin.createUser({
+        email: body.email,
+        password: body.password,
+        email_confirm: true,
+        user_metadata: { full_name: body.full_name },
+      });
+      created = retry.data;
+      createErr = retry.error;
+    }
+
+    if (createErr || !created?.user) return json({ error: createErr?.message ?? "Create failed" }, 400);
 
     const newUserId = created.user.id;
 
