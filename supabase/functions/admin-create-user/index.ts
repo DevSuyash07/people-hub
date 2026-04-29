@@ -37,12 +37,11 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    const { data: isAdmin, error: roleErr } = await admin.rpc("has_role", {
-      _user_id: userData.user.id,
-      _role: "admin",
-    });
-    if (roleErr) return json({ error: roleErr.message }, 500);
-    if (!isAdmin) return json({ error: "Admin access required" }, 403);
+    const [{ data: isAdmin }, { data: isHr }] = await Promise.all([
+      admin.rpc("has_role", { _user_id: userData.user.id, _role: "admin" }),
+      admin.rpc("has_role", { _user_id: userData.user.id, _role: "hr" }),
+    ]);
+    if (!isAdmin && !isHr) return json({ error: "Admin or HR access required" }, 403);
 
     const body = (await req.json()) as Payload;
     if (!body.email || !body.password || !body.full_name || !body.role) {
@@ -50,6 +49,10 @@ Deno.serve(async (req) => {
     }
     if (body.password.length < 8) return json({ error: "Password must be 8+ chars" }, 400);
     if (!["hr", "employee"].includes(body.role)) return json({ error: "Invalid role" }, 400);
+    // HR can only create employees, not other HRs
+    if (!isAdmin && body.role === "hr") {
+      return json({ error: "Only admin can create HR users" }, 403);
+    }
 
     // Create the auth user (auto-confirmed so they can sign in immediately)
     let { data: created, error: createErr } = await admin.auth.admin.createUser({

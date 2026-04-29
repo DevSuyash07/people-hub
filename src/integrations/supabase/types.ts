@@ -142,6 +142,7 @@ export type Database = {
           id: string
           joining_date: string | null
           phone: string | null
+          scheduled_check_in: string
           status: Database["public"]["Enums"]["employee_status"]
           updated_at: string
           user_id: string | null
@@ -165,6 +166,7 @@ export type Database = {
           id?: string
           joining_date?: string | null
           phone?: string | null
+          scheduled_check_in?: string
           status?: Database["public"]["Enums"]["employee_status"]
           updated_at?: string
           user_id?: string | null
@@ -188,6 +190,7 @@ export type Database = {
           id?: string
           joining_date?: string | null
           phone?: string | null
+          scheduled_check_in?: string
           status?: Database["public"]["Enums"]["employee_status"]
           updated_at?: string
           user_id?: string | null
@@ -413,7 +416,13 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "hr" | "employee"
-      attendance_status: "present" | "absent" | "late" | "half_day" | "on_leave"
+      attendance_status:
+        | "present"
+        | "absent"
+        | "late"
+        | "half_day"
+        | "on_leave"
+        | "leave"
       employee_status: "active" | "inactive" | "terminated"
       employment_type: "full_time" | "part_time" | "contract" | "intern"
       event_type:
@@ -551,7 +560,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "hr", "employee"],
-      attendance_status: ["present", "absent", "late", "half_day", "on_leave"],
+      attendance_status: [
+        "present",
+        "absent",
+        "late",
+        "half_day",
+        "on_leave",
+        "leave",
+      ],
       employee_status: ["active", "inactive", "terminated"],
       employment_type: ["full_time", "part_time", "contract", "intern"],
       event_type: [
