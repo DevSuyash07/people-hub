@@ -621,40 +621,250 @@ function HrDashboard() {
 /* ============================== EMPLOYEE ============================== */
 
 function EmployeeDashboard({ me, email }: { me: any; email?: string }) {
+  const [todayAtt, setTodayAtt] = useState<any>(null);
+  const [monthStats, setMonthStats] = useState({ present: 0, late: 0, leave: 0, hours: 0, workdays: 0 });
+  const [leaveBal, setLeaveBal] = useState({ allocated: 0, used: 0 });
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [taskCounts, setTaskCounts] = useState({ pending: 0, inProgress: 0, overdue: 0 });
+  const [upcoming, setUpcoming] = useState<any[]>([]);
+  const [recentLeaves, setRecentLeaves] = useState<any[]>([]);
+
+  useEffect(() => { if (me?.id) load(); }, [me?.id]);
+
+  async function load() {
+    const today = format(new Date(), "yyyy-MM-dd");
+    const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
+    const monthEnd = format(endOfMonth(new Date()), "yyyy-MM-dd");
+    const in14 = format(addDays(new Date(), 14), "yyyy-MM-dd");
+    const year = new Date().getFullYear();
+
+    const [att, mAtt, bal, tks, hol, evts, lvs] = await Promise.all([
+      supabase.from("attendance").select("*").eq("employee_id", me.id).eq("date", today).maybeSingle(),
+      supabase.from("attendance").select("*").eq("employee_id", me.id).gte("date", monthStart).lte("date", monthEnd),
+      supabase.from("leave_balances").select("allocated, used").eq("employee_id", me.id).eq("year", year),
+      supabase.from("tasks").select("id, title, priority, status, due_date").eq("assigned_to", me.id).neq("status", "completed").order("due_date", { ascending: true, nullsFirst: false }).limit(5),
+      supabase.from("holidays").select("id, name, holiday_date").gte("holiday_date", today).lte("holiday_date", in14).order("holiday_date"),
+      supabase.from("calendar_events").select("id, title, event_date, location").gte("event_date", today).lte("event_date", in14).order("event_date"),
+      supabase.from("leave_requests").select("id, start_date, end_date, days, status, leave_type:leave_types(name)").eq("employee_id", me.id).order("created_at", { ascending: false }).limit(4),
+    ]);
+
+    setTodayAtt(att.data);
+
+    const monthRows = mAtt.data ?? [];
+    let hours = 0, present = 0, late = 0, leave = 0;
+    monthRows.forEach((r: any) => {
+      if (r.check_in && r.check_out) {
+        hours += workedHours(format(new Date(r.check_in), "HH:mm"), format(new Date(r.check_out), "HH:mm"));
+      }
+      if (r.status === "present") present++;
+      else if (r.status === "late") late++;
+      else if (r.status === "on_leave" || r.status === "leave") leave++;
+    });
+    setMonthStats({ present, late, leave, hours: Math.round(hours * 10) / 10, workdays: monthRows.length });
+
+    const balances = bal.data ?? [];
+    const totalAlloc = balances.reduce((s: number, b: any) => s + Number(b.allocated || 0), 0);
+    const totalUsed = balances.reduce((s: number, b: any) => s + Number(b.used || 0), 0);
+    setLeaveBal({ allocated: totalAlloc, used: totalUsed });
+
+    const taskList = tks.data ?? [];
+    setTasks(taskList);
+    const overdue = taskList.filter((t: any) => t.due_date && t.due_date < today).length;
+    const inProg = taskList.filter((t: any) => t.status === "in_progress").length;
+    const pend = taskList.filter((t: any) => t.status === "pending").length;
+    setTaskCounts({ pending: pend, inProgress: inProg, overdue });
+
+    const merged = [
+      ...(hol.data ?? []).map((h: any) => ({ id: `h-${h.id}`, title: h.name, date: h.holiday_date, kind: "holiday" as const })),
+      ...(evts.data ?? []).map((e: any) => ({ id: `e-${e.id}`, title: e.title, date: e.event_date, kind: "event" as const, location: e.location })),
+    ].sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5);
+    setUpcoming(merged);
+
+    setRecentLeaves(lvs.data ?? []);
+  }
+
+  async function checkIn() {
+    const now = new Date();
+    const today = format(now, "yyyy-MM-dd");
+    const status = computeAttendanceStatus({
+      scheduled: me.scheduled_check_in?.slice(0, 5) ?? "09:00",
+      checkIn: format(now, "HH:mm"),
+    }) as any;
+    const { error } = await supabase.from("attendance").insert({
+      employee_id: me.id, date: today, check_in: now.toISOString(), status,
+    });
+    if (error) return toast({ title: "Check-in failed", description: error.message, variant: "destructive" });
+    toast({ title: `Checked in at ${format(now, "HH:mm")}`, description: status === "late" ? "Marked late." : "On time." });
+    load();
+  }
+
+  async function checkOut() {
+    if (!todayAtt?.id) return;
+    const { error } = await supabase.from("attendance").update({ check_out: new Date().toISOString() }).eq("id", todayAtt.id);
+    if (error) return toast({ title: "Check-out failed", description: error.message, variant: "destructive" });
+    toast({ title: "Checked out" });
+    load();
+  }
+
+  const leaveRemaining = Math.max(0, leaveBal.allocated - leaveBal.used);
+  const todayHours = todayAtt?.check_in && todayAtt?.check_out
+    ? Math.round(workedHours(format(new Date(todayAtt.check_in), "HH:mm"), format(new Date(todayAtt.check_out), "HH:mm")) * 10) / 10
+    : 0;
+
   return (
     <AppLayout>
       <PageHeader
         eyebrow={`Hello${me?.full_name ? `, ${me.full_name.split(" ")[0]}` : ""}`}
         title="Welcome back"
-        description="Your personal workspace. More tools arrive as your team grows."
+        description={format(new Date(), "EEEE, MMMM d, yyyy")}
       />
-      <div className="grid md:grid-cols-3 gap-4 mb-10">
-        <div className="stat-card">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">Department</div>
-          <div className="font-display text-3xl mt-3">{me?.department?.name ?? "—"}</div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <StatCard label="Today's status" value={todayAtt?.status ? prettyStatus(todayAtt.status) : "Not in"} icon={UserCheck} accent={!!todayAtt?.check_in} isText />
+        <StatCard label="Hours this month" value={`${monthStats.hours}h`} icon={Timer} isText />
+        <StatCard label="Leave remaining" value={leaveRemaining} icon={CalendarDays} />
+        <StatCard label="Open tasks" value={tasks.length} icon={CheckSquare} highlight={taskCounts.overdue > 0} />
+      </div>
+
+      {/* Today's attendance + Tasks */}
+      <div className="grid lg:grid-cols-3 gap-4 mb-6">
+        <div className="surface-card overflow-hidden">
+          <SectionHeader title="Today's attendance" subtitle={`Schedule ${me?.scheduled_check_in?.slice(0,5) ?? "09:00"}`} icon={Clock} />
+          <div className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">Check-in</span>
+              <span className="font-mono-tabular font-medium">{todayAtt?.check_in ? format(new Date(todayAtt.check_in), "HH:mm") : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">Check-out</span>
+              <span className="font-mono-tabular font-medium">{todayAtt?.check_out ? format(new Date(todayAtt.check_out), "HH:mm") : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">Worked</span>
+              <span className="font-mono-tabular font-medium">{todayHours}h <span className="text-muted-foreground">/ 9h</span></span>
+            </div>
+            <div className="pt-2">
+              {!todayAtt?.check_in ? (
+                <Button onClick={checkIn} className="w-full"><LogIn className="h-4 w-4 mr-2" />Check in now</Button>
+              ) : !todayAtt?.check_out ? (
+                <Button onClick={checkOut} variant="outline" className="w-full"><LogOutIcon className="h-4 w-4 mr-2" />Check out</Button>
+              ) : (
+                <div className="text-center text-sm text-muted-foreground">Day complete ✓</div>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="stat-card">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">Designation</div>
-          <div className="font-display text-3xl mt-3">{me?.designation ?? "—"}</div>
-        </div>
-        <div className="stat-card">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">Status</div>
-          <div className="mt-3"><StatusPill status={me?.status ?? "active"} large /></div>
+
+        <div className="surface-card overflow-hidden lg:col-span-2">
+          <SectionHeader title="My open tasks" subtitle={`${taskCounts.overdue} overdue · ${taskCounts.inProgress} in progress`} icon={CheckSquare} href="/tasks" />
+          {tasks.length === 0 ? (
+            <EmptyState text="No open tasks. Nice work!" />
+          ) : (
+            <ul className="divide-y divide-border">
+              {tasks.map((t: any) => {
+                const overdue = t.due_date && t.due_date < format(new Date(), "yyyy-MM-dd");
+                return (
+                  <li key={t.id} className="px-6 py-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex items-center gap-3">
+                      <span className={`h-2 w-2 rounded-full shrink-0 ${t.priority === "high" ? "bg-destructive" : t.priority === "medium" ? "bg-accent" : "bg-muted-foreground/50"}`} />
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate">{t.title}</div>
+                        <div className="text-xs text-muted-foreground capitalize">{t.status.replace("_", " ")}{t.due_date ? ` · due ${format(new Date(t.due_date), "MMM d")}` : ""}</div>
+                      </div>
+                    </div>
+                    {overdue && <span className="text-xs text-destructive shrink-0">Overdue</span>}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       </div>
-      <div className="surface-card p-8">
-        <h3 className="text-2xl mb-2">Your details</h3>
-        <p className="text-sm text-muted-foreground mb-6">
-          Keep your contact info current — head to <a href="/profile" className="underline underline-offset-4 hover:text-accent">My Profile</a> to edit.
-        </p>
-        <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-          <Row label="Full name" value={me?.full_name ?? "—"} />
-          <Row label="Email" value={email ?? me?.email ?? "—"} />
-          <Row label="Phone" value={me?.phone ?? "—"} />
-          <Row label="Joining date" value={me?.joining_date ?? "—"} />
-        </dl>
+
+      {/* Month summary + Upcoming + Recent leaves */}
+      <div className="grid lg:grid-cols-3 gap-4 mb-10">
+        <div className="surface-card overflow-hidden">
+          <SectionHeader title="This month" subtitle={format(new Date(), "MMMM yyyy")} icon={CalendarCheck} />
+          <div className="p-6 space-y-4">
+            <AttendanceRow label="Present" value={monthStats.present} total={Math.max(monthStats.workdays, 1)} tone="success" />
+            <AttendanceRow label="Late" value={monthStats.late} total={Math.max(monthStats.workdays, 1)} tone="accent" />
+            <AttendanceRow label="On leave" value={monthStats.leave} total={Math.max(monthStats.workdays, 1)} tone="muted" />
+          </div>
+        </div>
+
+        <div className="surface-card overflow-hidden">
+          <SectionHeader title="Upcoming" subtitle="Next 14 days" icon={CalendarDays} href="/calendar" />
+          {upcoming.length === 0 ? (
+            <EmptyState text="Nothing on the calendar." />
+          ) : (
+            <ul className="divide-y divide-border">
+              {upcoming.map((u: any) => {
+                const d = new Date(u.date);
+                const diff = differenceInCalendarDays(d, new Date());
+                const rel = diff === 0 ? "Today" : diff === 1 ? "Tomorrow" : `In ${diff}d`;
+                return (
+                  <li key={u.id} className="px-6 py-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`h-8 w-8 rounded-md flex items-center justify-center text-xs font-medium ${u.kind === "holiday" ? "bg-success/10 text-success" : "bg-accent-soft text-accent"}`}>
+                        {format(d, "dd")}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate">{u.title}</div>
+                        <div className="text-xs text-muted-foreground">{u.kind === "holiday" ? "Holiday" : "Event"}</div>
+                      </div>
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">{rel}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        <div className="surface-card overflow-hidden">
+          <SectionHeader title="My leave requests" subtitle="Recent activity" icon={CalendarX} href="/leave" />
+          {recentLeaves.length === 0 ? (
+            <EmptyState text="No leave requests yet." />
+          ) : (
+            <ul className="divide-y divide-border">
+              {recentLeaves.map((l: any) => (
+                <li key={l.id} className="px-6 py-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium truncate">{l.leave_type?.name ?? "Leave"}</div>
+                    <div className="text-xs text-muted-foreground">{format(new Date(l.start_date), "MMM d")} → {format(new Date(l.end_date), "MMM d")} · {l.days}d</div>
+                  </div>
+                  <LeavePill status={l.status} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </AppLayout>
+  );
+}
+
+function prettyStatus(s: string) {
+  if (s === "present") return "Present";
+  if (s === "late") return "Late";
+  if (s === "half_day") return "Half day";
+  if (s === "on_leave" || s === "leave") return "On leave";
+  if (s === "absent") return "Absent";
+  return s;
+}
+
+function LeavePill({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    approved: "bg-success/10 text-success border-success/20",
+    pending: "bg-accent-soft text-accent border-accent/20",
+    rejected: "bg-destructive/10 text-destructive border-destructive/20",
+    cancelled: "bg-muted text-muted-foreground border-border",
+  };
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs capitalize shrink-0 ${map[status] ?? map.pending}`}>
+      {status}
+    </span>
   );
 }
 
