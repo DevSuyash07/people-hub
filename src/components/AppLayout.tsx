@@ -20,6 +20,7 @@ import logo from "@/assets/logo.svg";
 const navByRole = {
   admin: [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/tasks", label: "My Tasks", icon: CheckSquare },
     { to: "/employees", label: "Employees", icon: Users },
     { to: "/departments", label: "Departments", icon: Building2 },
     { to: "/attendance", label: "Attendance", icon: Clock },
@@ -31,6 +32,7 @@ const navByRole = {
   ],
   hr: [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/tasks", label: "My Tasks", icon: CheckSquare },
     { to: "/employees", label: "Employees", icon: Users },
     { to: "/departments", label: "Departments", icon: Building2 },
     { to: "/attendance", label: "Attendance", icon: Clock },
@@ -41,6 +43,7 @@ const navByRole = {
   ],
   employee: [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/tasks", label: "My Tasks", icon: CheckSquare },
     { to: "/attendance", label: "Attendance", icon: Clock },
     { to: "/leave", label: "Leave", icon: CalendarDays },
     { to: "/calendar", label: "Calendar", icon: CalendarRange },
