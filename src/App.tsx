@@ -16,6 +16,7 @@ import Attendance from "./pages/Attendance.tsx";
 import Leave from "./pages/Leave.tsx";
 import CalendarPage from "./pages/Calendar.tsx";
 import Reports from "./pages/Reports.tsx";
+import Tasks from "./pages/Tasks.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
