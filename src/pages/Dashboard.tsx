@@ -879,7 +879,7 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StatCard({ label, value, icon: Icon, accent, highlight }: { label: string; value: number; icon: any; accent?: boolean; highlight?: boolean }) {
+function StatCard({ label, value, icon: Icon, accent, highlight, isText }: { label: string; value: number | string; icon: any; accent?: boolean; highlight?: boolean; isText?: boolean }) {
   return (
     <div className={`stat-card ${highlight ? "ring-1 ring-accent/40" : ""}`}>
       <div className="flex items-start justify-between">
@@ -888,7 +888,7 @@ function StatCard({ label, value, icon: Icon, accent, highlight }: { label: stri
           <Icon className="h-4 w-4" />
         </div>
       </div>
-      <div className="font-display text-4xl mt-4 font-mono-tabular">{value}</div>
+      <div className={`font-display mt-4 font-mono-tabular ${isText ? "text-2xl" : "text-4xl"}`}>{value}</div>
     </div>
   );
 }
