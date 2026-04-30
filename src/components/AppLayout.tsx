@@ -11,6 +11,7 @@ import {
   CalendarDays,
   CalendarRange,
   BarChart3,
+  CheckSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReactNode } from "react";
