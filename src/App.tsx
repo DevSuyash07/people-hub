@@ -16,6 +16,7 @@ import Attendance from "./pages/Attendance.tsx";
 import Leave from "./pages/Leave.tsx";
 import CalendarPage from "./pages/Calendar.tsx";
 import Reports from "./pages/Reports.tsx";
+import Tasks from "./pages/Tasks.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
             <Route path="/employees" element={<ProtectedRoute allow={["admin", "hr"]}><Employees /></ProtectedRoute>} />
             <Route path="/departments" element={<ProtectedRoute allow={["admin", "hr"]}><Departments /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
