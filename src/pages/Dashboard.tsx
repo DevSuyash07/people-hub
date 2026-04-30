@@ -8,9 +8,10 @@ import { toast } from "@/hooks/use-toast";
 import {
   Users, Building2, UserCheck, UserX, ArrowUpRight,
   CalendarCheck, CalendarX, Clock, AlertCircle, Cake, PartyPopper,
-  CalendarDays, UserPlus, UserMinus, Check, X,
+  CalendarDays, UserPlus, UserMinus, Check, X, CheckSquare, Timer, LogIn, LogOut as LogOutIcon,
 } from "lucide-react";
-import { format, differenceInCalendarDays, isSameMonth, isSameDay, addDays, startOfDay } from "date-fns";
+import { format, differenceInCalendarDays, isSameMonth, isSameDay, addDays, startOfDay, startOfMonth, endOfMonth } from "date-fns";
+import { computeAttendanceStatus, workedHours } from "@/lib/attendance";
 
 export default function Dashboard() {
   const { user, role } = useAuth();
