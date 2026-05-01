@@ -246,6 +246,193 @@ export default function Settings() {
           </ul>
         </div>
       </div>
+
+      <TeamStructureCard />
     </AppLayout>
+  );
+}
+
+interface TeamEmployee {
+  id: string;
+  full_name: string;
+  designation: string | null;
+  status: string;
+  is_team_lead: boolean;
+  team_lead_id: string | null;
+  department?: { name: string } | null;
+}
+
+function TeamStructureCard() {
+  const [emps, setEmps] = useState<TeamEmployee[]>([]);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [assignFor, setAssignFor] = useState<string>("");
+  const [assignLead, setAssignLead] = useState<string>("");
+
+  useEffect(() => { load(); }, []);
+
+  async function load() {
+    const { data } = await supabase
+      .from("employees")
+      .select("id, full_name, designation, status, is_team_lead, team_lead_id, department:departments(name)")
+      .eq("status", "active")
+      .order("full_name");
+    setEmps((data as TeamEmployee[]) ?? []);
+  }
+
+  async function toggleLead(emp: TeamEmployee, next: boolean) {
+    setBusyId(emp.id);
+    // When demoting, also clear any reports pointing to this person to avoid trigger errors elsewhere
+    if (!next) {
+      await supabase.from("employees").update({ team_lead_id: null }).eq("team_lead_id", emp.id);
+    }
+    const patch: any = { is_team_lead: next };
+    if (next) patch.team_lead_id = null; // a lead cannot also report to a lead
+    const { error } = await supabase.from("employees").update(patch).eq("id", emp.id);
+    setBusyId(null);
+    if (error) return toast.error(error.message);
+    toast.success(next ? `${emp.full_name} is now a Team Lead` : `${emp.full_name} is no longer a Team Lead`);
+    load();
+  }
+
+  async function assignToLead() {
+    if (!assignFor || !assignLead) return toast.error("Pick an employee and a team lead");
+    const { error } = await supabase
+      .from("employees")
+      .update({ team_lead_id: assignLead })
+      .eq("id", assignFor);
+    if (error) return toast.error(error.message);
+    toast.success("Assigned");
+    setAssignFor(""); setAssignLead("");
+    load();
+  }
+
+  async function unassign(empId: string) {
+    const { error } = await supabase.from("employees").update({ team_lead_id: null }).eq("id", empId);
+    if (error) return toast.error(error.message);
+    load();
+  }
+
+  const leads = emps.filter((e) => e.is_team_lead);
+  const assignableMembers = emps.filter((e) => !e.is_team_lead && e.id !== assignLead);
+
+  return (
+    <div className="surface-card overflow-hidden mt-8">
+      <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+        <div>
+          <h3 className="text-xl flex items-center gap-2"><Crown className="h-4 w-4 text-amber-500" /> Team structure</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Promote employees to Team Lead and assign reports.</p>
+        </div>
+      </div>
+
+      {/* Quick assign */}
+      <div className="px-6 py-4 border-b border-border grid md:grid-cols-[1fr_1fr_auto] gap-3 items-end bg-muted/30">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Employee</Label>
+          <Select value={assignFor} onValueChange={setAssignFor}>
+            <SelectTrigger><SelectValue placeholder="Select employee…" /></SelectTrigger>
+            <SelectContent className="max-h-72">
+              {assignableMembers.map((e) => (
+                <SelectItem key={e.id} value={e.id}>{e.full_name}{e.designation ? ` · ${e.designation}` : ""}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Assign to team lead</Label>
+          <Select value={assignLead} onValueChange={setAssignLead}>
+            <SelectTrigger><SelectValue placeholder="Select team lead…" /></SelectTrigger>
+            <SelectContent className="max-h-72">
+              {leads.map((l) => (
+                <SelectItem key={l.id} value={l.id}>{l.full_name}{l.department?.name ? ` · ${l.department.name}` : ""}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button onClick={assignToLead} className="bg-accent hover:bg-accent/90 text-accent-foreground">Assign</Button>
+      </div>
+
+      {/* Leads & their reports */}
+      <div className="divide-y divide-border">
+        {leads.length === 0 && (
+          <div className="px-6 py-10 text-center text-sm text-muted-foreground">
+            No team leads yet. Toggle <Crown className="inline h-3 w-3" /> beside an employee below to promote them.
+          </div>
+        )}
+        {leads.map((lead) => {
+          const reports = emps.filter((e) => e.team_lead_id === lead.id);
+          return (
+            <div key={lead.id} className="px-6 py-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                    <Crown className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-sm">{lead.full_name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {lead.designation || "—"} · {lead.department?.name || "Unassigned"} · {reports.length} report{reports.length === 1 ? "" : "s"}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Team Lead</span>
+                  <Switch
+                    checked
+                    disabled={busyId === lead.id}
+                    onCheckedChange={() => toggleLead(lead, false)}
+                  />
+                </div>
+              </div>
+              {reports.length > 0 && (
+                <ul className="mt-3 ml-12 space-y-1">
+                  {reports.map((r) => (
+                    <li key={r.id} className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2">
+                        <Users className="h-3 w-3 text-muted-foreground" />
+                        {r.full_name}
+                        <span className="text-xs text-muted-foreground">{r.designation ? `· ${r.designation}` : ""}</span>
+                      </span>
+                      <button
+                        onClick={() => unassign(r.id)}
+                        className="text-xs text-muted-foreground hover:text-destructive"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* All employees toggle list */}
+      <div className="border-t border-border">
+        <div className="px-6 py-3 text-xs uppercase tracking-wide text-muted-foreground bg-muted/30">
+          All active employees
+        </div>
+        <ul className="divide-y divide-border max-h-96 overflow-y-auto">
+          {emps.map((e) => (
+            <li key={e.id} className="px-6 py-3 flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium">{e.full_name}</div>
+                <div className="text-xs text-muted-foreground">
+                  {e.designation || "—"} · {e.department?.name || "Unassigned"}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Lead</span>
+                <Switch
+                  checked={e.is_team_lead}
+                  disabled={busyId === e.id}
+                  onCheckedChange={(v) => toggleLead(e, v)}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }
