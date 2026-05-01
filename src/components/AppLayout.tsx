@@ -60,7 +60,23 @@ const teamLeadItem = { to: "/my-team", label: "My Team", icon: Users2 };
 export function AppLayout({ children }: { children: ReactNode }) {
   const { user, role, signOut } = useAuth();
   const location = useLocation();
-  const items = role ? navByRole[role] : [];
+  const [isLead, setIsLead] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("employees")
+      .select("is_team_lead")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setIsLead(!!data?.is_team_lead));
+  }, [user]);
+
+  const baseItems = role ? navByRole[role] : [];
+  const items =
+    role === "employee" && isLead
+      ? [baseItems[0], baseItems[1], teamLeadItem, ...baseItems.slice(2)]
+      : baseItems;
 
   return (
     <div className="min-h-screen flex w-full bg-background">
