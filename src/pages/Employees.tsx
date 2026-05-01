@@ -370,8 +370,10 @@ function EmployeeDialog({
 }
 
 function ProfileFields({
-  form, setForm, departments, isEdit, isAdmin,
-}: { form: any; setForm: any; departments: Department[]; isEdit: boolean; isAdmin: boolean }) {
+  form, setForm, departments, isEdit, isAdmin, teamLeads, currentEmployeeId,
+}: { form: any; setForm: any; departments: Department[]; isEdit: boolean; isAdmin: boolean; teamLeads: Employee[]; currentEmployeeId: string | undefined }) {
+  // A team lead cannot also report to another lead (keeps the hierarchy flat)
+  const eligibleLeads = teamLeads.filter((t) => t.id !== currentEmployeeId);
   return (
     <div className="grid sm:grid-cols-2 gap-4 py-2">
       <div className="sm:col-span-2 space-y-1.5">
