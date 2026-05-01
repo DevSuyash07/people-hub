@@ -12,10 +12,12 @@ import {
   CalendarRange,
   BarChart3,
   CheckSquare,
+  Users2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import logo from "@/assets/logo.svg";
+import { supabase } from "@/integrations/supabase/client";
 
 const navByRole = {
   admin: [
