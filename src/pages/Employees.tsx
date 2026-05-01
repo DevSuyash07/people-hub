@@ -113,6 +113,7 @@ export default function Employees() {
               departments={departments}
               employee={editing}
               isAdmin={isAdmin}
+              teamLeads={teamLeads}
               onSaved={() => { setOpen(false); setEditing(null); load(); }}
             />
           </Dialog>
