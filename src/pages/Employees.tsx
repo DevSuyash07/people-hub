@@ -463,6 +463,47 @@ function ProfileFields({
           </SelectContent>
         </Select>
       </div>
+
+      {isEdit && (
+        <div className="sm:col-span-2 rounded-lg border border-border bg-muted/30 p-4 space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm font-medium flex items-center gap-2">
+                <Crown className="h-4 w-4 text-amber-500" /> Team Lead
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Team leads can view their direct reports' attendance and tasks.
+              </p>
+            </div>
+            <Switch
+              checked={form.is_team_lead}
+              onCheckedChange={(v) => setForm({ ...form, is_team_lead: v, team_lead_id: v ? "" : form.team_lead_id })}
+            />
+          </div>
+          {!form.is_team_lead && (
+            <div className="space-y-1.5">
+              <Label>Reports to</Label>
+              <Select
+                value={form.team_lead_id || "none"}
+                onValueChange={(v) => setForm({ ...form, team_lead_id: v === "none" ? "" : v })}
+              >
+                <SelectTrigger><SelectValue placeholder="No team lead" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No team lead</SelectItem>
+                  {eligibleLeads.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.full_name}{l.designation ? ` · ${l.designation}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {eligibleLeads.length === 0 && (
+                <p className="text-xs text-muted-foreground">No team leads exist yet — mark someone as Team Lead first.</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
