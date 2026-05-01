@@ -60,12 +60,14 @@ export default function Employees() {
 
   async function load() {
     const [{ data: emps }, { data: depts }] = await Promise.all([
-      supabase.from("employees").select("*, department:departments(name)").order("full_name"),
+      supabase.from("employees").select("*, department:departments(name), team_lead:team_lead_id(full_name)").order("full_name"),
       supabase.from("departments").select("id, name").order("name"),
     ]);
     setList((emps as Employee[]) ?? []);
     setDepartments(depts ?? []);
   }
+
+  const teamLeads = list.filter((e) => e.is_team_lead && e.status === "active");
 
   async function deleteEmployee() {
     if (!confirmDelete) return;
