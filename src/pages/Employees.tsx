@@ -217,8 +217,8 @@ export default function Employees() {
 }
 
 function EmployeeDialog({
-  departments, employee, isAdmin, onSaved,
-}: { departments: Department[]; employee: Employee | null; isAdmin: boolean; onSaved: () => void }) {
+  departments, employee, isAdmin, teamLeads, onSaved,
+}: { departments: Department[]; employee: Employee | null; isAdmin: boolean; teamLeads: Employee[]; onSaved: () => void }) {
   const isEdit = !!employee;
   const [tab, setTab] = useState("profile");
   const [form, setForm] = useState({
@@ -227,6 +227,8 @@ function EmployeeDialog({
     department_id: "", employment_type: "full_time",
     joining_date: "", status: "active",
     scheduled_check_in: "09:00",
+    is_team_lead: false,
+    team_lead_id: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -244,9 +246,11 @@ function EmployeeDialog({
         joining_date: employee.joining_date ?? "",
         status: employee.status ?? "active",
         scheduled_check_in: (employee.scheduled_check_in ?? "09:00:00").slice(0, 5),
+        is_team_lead: !!employee.is_team_lead,
+        team_lead_id: employee.team_lead_id ?? "",
       });
     } else {
-      setForm({ full_name: "", email: "", password: "", role: "employee", phone: "", designation: "", department_id: "", employment_type: "full_time", joining_date: "", status: "active", scheduled_check_in: "09:00" });
+      setForm({ full_name: "", email: "", password: "", role: "employee", phone: "", designation: "", department_id: "", employment_type: "full_time", joining_date: "", status: "active", scheduled_check_in: "09:00", is_team_lead: false, team_lead_id: "" });
     }
     setTab("profile");
   }, [employee]);
