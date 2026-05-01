@@ -12,15 +12,18 @@ import {
   CalendarRange,
   BarChart3,
   CheckSquare,
+  Users2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import logo from "@/assets/logo.svg";
+import { supabase } from "@/integrations/supabase/client";
 
 const navByRole = {
   admin: [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/tasks", label: "My Tasks", icon: CheckSquare },
+    { to: "/my-team", label: "My Team", icon: Users2 },
     { to: "/employees", label: "Employees", icon: Users },
     { to: "/departments", label: "Departments", icon: Building2 },
     { to: "/attendance", label: "Attendance", icon: Clock },
@@ -33,6 +36,7 @@ const navByRole = {
   hr: [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/tasks", label: "My Tasks", icon: CheckSquare },
+    { to: "/my-team", label: "My Team", icon: Users2 },
     { to: "/employees", label: "Employees", icon: Users },
     { to: "/departments", label: "Departments", icon: Building2 },
     { to: "/attendance", label: "Attendance", icon: Clock },
@@ -51,10 +55,28 @@ const navByRole = {
   ],
 } as const;
 
+const teamLeadItem = { to: "/my-team", label: "My Team", icon: Users2 };
+
 export function AppLayout({ children }: { children: ReactNode }) {
   const { user, role, signOut } = useAuth();
   const location = useLocation();
-  const items = role ? navByRole[role] : [];
+  const [isLead, setIsLead] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("employees")
+      .select("is_team_lead")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setIsLead(!!data?.is_team_lead));
+  }, [user]);
+
+  const baseItems = role ? navByRole[role] : [];
+  const items =
+    role === "employee" && isLead
+      ? [baseItems[0], baseItems[1], teamLeadItem, ...baseItems.slice(2)]
+      : baseItems;
 
   return (
     <div className="min-h-screen flex w-full bg-background">
