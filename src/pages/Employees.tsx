@@ -18,7 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Plus, Search, Mail, Phone, Trash2 } from "lucide-react";
+import { Plus, Search, Mail, Phone, Trash2, Crown } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { StatusPill } from "@/pages/Dashboard";
 import { format } from "date-fns";
 import {
@@ -37,7 +38,10 @@ interface Employee {
   employment_type: string | null;
   department_id: string | null;
   scheduled_check_in: string | null;
+  is_team_lead: boolean;
+  team_lead_id: string | null;
   department?: { name: string } | null;
+  team_lead?: { full_name: string } | null;
 }
 
 interface Department { id: string; name: string }
