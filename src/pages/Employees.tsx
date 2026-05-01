@@ -18,7 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Plus, Search, Mail, Phone, Trash2 } from "lucide-react";
+import { Plus, Search, Mail, Phone, Trash2, Crown } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { StatusPill } from "@/pages/Dashboard";
 import { format } from "date-fns";
 import {
@@ -37,7 +38,10 @@ interface Employee {
   employment_type: string | null;
   department_id: string | null;
   scheduled_check_in: string | null;
+  is_team_lead: boolean;
+  team_lead_id: string | null;
   department?: { name: string } | null;
+  team_lead?: { full_name: string } | null;
 }
 
 interface Department { id: string; name: string }
@@ -56,12 +60,14 @@ export default function Employees() {
 
   async function load() {
     const [{ data: emps }, { data: depts }] = await Promise.all([
-      supabase.from("employees").select("*, department:departments(name)").order("full_name"),
+      supabase.from("employees").select("*, department:departments(name), team_lead:team_lead_id(full_name)").order("full_name"),
       supabase.from("departments").select("id, name").order("name"),
     ]);
     setList((emps as Employee[]) ?? []);
     setDepartments(depts ?? []);
   }
+
+  const teamLeads = list.filter((e) => e.is_team_lead && e.status === "active");
 
   async function deleteEmployee() {
     if (!confirmDelete) return;
@@ -107,6 +113,7 @@ export default function Employees() {
               departments={departments}
               employee={editing}
               isAdmin={isAdmin}
+              teamLeads={teamLeads}
               onSaved={() => { setOpen(false); setEditing(null); load(); }}
             />
           </Dialog>
@@ -147,7 +154,14 @@ export default function Employees() {
                     {e.full_name?.[0]?.toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <div className="font-medium truncate">{e.full_name}</div>
+                    <div className="font-medium truncate flex items-center gap-2">
+                      {e.full_name}
+                      {e.is_team_lead && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5">
+                          <Crown className="h-2.5 w-2.5" /> Lead
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-muted-foreground truncate flex items-center gap-3 mt-0.5">
                       <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{e.email}</span>
                       {e.phone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{e.phone}</span>}
@@ -157,6 +171,9 @@ export default function Employees() {
                 <div className="hidden sm:flex flex-col items-end text-xs text-muted-foreground gap-1">
                   <span>{e.designation || "—"}</span>
                   <span>{e.department?.name || "Unassigned"}</span>
+                  {e.team_lead?.full_name && (
+                    <span className="text-[11px]">↳ {e.team_lead.full_name}</span>
+                  )}
                 </div>
                 <StatusPill status={e.status} />
                 {isAdmin && (
@@ -200,8 +217,8 @@ export default function Employees() {
 }
 
 function EmployeeDialog({
-  departments, employee, isAdmin, onSaved,
-}: { departments: Department[]; employee: Employee | null; isAdmin: boolean; onSaved: () => void }) {
+  departments, employee, isAdmin, teamLeads, onSaved,
+}: { departments: Department[]; employee: Employee | null; isAdmin: boolean; teamLeads: Employee[]; onSaved: () => void }) {
   const isEdit = !!employee;
   const [tab, setTab] = useState("profile");
   const [form, setForm] = useState({
@@ -210,6 +227,8 @@ function EmployeeDialog({
     department_id: "", employment_type: "full_time",
     joining_date: "", status: "active",
     scheduled_check_in: "09:00",
+    is_team_lead: false,
+    team_lead_id: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -227,9 +246,11 @@ function EmployeeDialog({
         joining_date: employee.joining_date ?? "",
         status: employee.status ?? "active",
         scheduled_check_in: (employee.scheduled_check_in ?? "09:00:00").slice(0, 5),
+        is_team_lead: !!employee.is_team_lead,
+        team_lead_id: employee.team_lead_id ?? "",
       });
     } else {
-      setForm({ full_name: "", email: "", password: "", role: "employee", phone: "", designation: "", department_id: "", employment_type: "full_time", joining_date: "", status: "active", scheduled_check_in: "09:00" });
+      setForm({ full_name: "", email: "", password: "", role: "employee", phone: "", designation: "", department_id: "", employment_type: "full_time", joining_date: "", status: "active", scheduled_check_in: "09:00", is_team_lead: false, team_lead_id: "" });
     }
     setTab("profile");
   }, [employee]);
@@ -246,6 +267,8 @@ function EmployeeDialog({
     setSaving(true);
     try {
       if (isEdit) {
+        // Order matters: clearing is_team_lead while reports still point to this person would orphan them.
+        // Admin/HR are responsible for reassigning before un-marking; trigger only blocks self/invalid lead.
         const payload: any = {
           full_name: form.full_name.trim(),
           email: form.email.trim().toLowerCase(),
@@ -256,6 +279,8 @@ function EmployeeDialog({
           joining_date: form.joining_date || null,
           status: form.status,
           scheduled_check_in: `${form.scheduled_check_in}:00`,
+          is_team_lead: form.is_team_lead,
+          team_lead_id: form.team_lead_id || null,
         };
         const { error } = await supabase.from("employees").update(payload).eq("id", employee!.id);
         if (error) throw error;
@@ -323,14 +348,14 @@ function EmployeeDialog({
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
           </TabsList>
           <TabsContent value="profile" className="mt-4">
-            <ProfileFields form={form} setForm={setForm} departments={departments} isEdit={isEdit} isAdmin={isAdmin} />
+            <ProfileFields form={form} setForm={setForm} departments={departments} isEdit={isEdit} isAdmin={isAdmin} teamLeads={teamLeads} currentEmployeeId={employee?.id} />
           </TabsContent>
           <TabsContent value="attendance" className="mt-4">
             <AttendanceEditor employee={employee!} scheduledTime={form.scheduled_check_in} />
           </TabsContent>
         </Tabs>
       ) : (
-        <ProfileFields form={form} setForm={setForm} departments={departments} isEdit={isEdit} isAdmin={isAdmin} />
+        <ProfileFields form={form} setForm={setForm} departments={departments} isEdit={isEdit} isAdmin={isAdmin} teamLeads={teamLeads} currentEmployeeId={undefined} />
       )}
 
       {(!isEdit || tab === "profile") && (
@@ -345,8 +370,10 @@ function EmployeeDialog({
 }
 
 function ProfileFields({
-  form, setForm, departments, isEdit, isAdmin,
-}: { form: any; setForm: any; departments: Department[]; isEdit: boolean; isAdmin: boolean }) {
+  form, setForm, departments, isEdit, isAdmin, teamLeads, currentEmployeeId,
+}: { form: any; setForm: any; departments: Department[]; isEdit: boolean; isAdmin: boolean; teamLeads: Employee[]; currentEmployeeId: string | undefined }) {
+  // A team lead cannot also report to another lead (keeps the hierarchy flat)
+  const eligibleLeads = teamLeads.filter((t) => t.id !== currentEmployeeId);
   return (
     <div className="grid sm:grid-cols-2 gap-4 py-2">
       <div className="sm:col-span-2 space-y-1.5">
@@ -436,6 +463,47 @@ function ProfileFields({
           </SelectContent>
         </Select>
       </div>
+
+      {isEdit && (
+        <div className="sm:col-span-2 rounded-lg border border-border bg-muted/30 p-4 space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm font-medium flex items-center gap-2">
+                <Crown className="h-4 w-4 text-amber-500" /> Team Lead
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Team leads can view their direct reports' attendance and tasks.
+              </p>
+            </div>
+            <Switch
+              checked={form.is_team_lead}
+              onCheckedChange={(v) => setForm({ ...form, is_team_lead: v, team_lead_id: v ? "" : form.team_lead_id })}
+            />
+          </div>
+          {!form.is_team_lead && (
+            <div className="space-y-1.5">
+              <Label>Reports to</Label>
+              <Select
+                value={form.team_lead_id || "none"}
+                onValueChange={(v) => setForm({ ...form, team_lead_id: v === "none" ? "" : v })}
+              >
+                <SelectTrigger><SelectValue placeholder="No team lead" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No team lead</SelectItem>
+                  {eligibleLeads.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.full_name}{l.designation ? ` · ${l.designation}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {eligibleLeads.length === 0 && (
+                <p className="text-xs text-muted-foreground">No team leads exist yet — mark someone as Team Lead first.</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
