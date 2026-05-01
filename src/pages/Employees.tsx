@@ -348,14 +348,14 @@ function EmployeeDialog({
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
           </TabsList>
           <TabsContent value="profile" className="mt-4">
-            <ProfileFields form={form} setForm={setForm} departments={departments} isEdit={isEdit} isAdmin={isAdmin} />
+            <ProfileFields form={form} setForm={setForm} departments={departments} isEdit={isEdit} isAdmin={isAdmin} teamLeads={teamLeads} currentEmployeeId={employee?.id} />
           </TabsContent>
           <TabsContent value="attendance" className="mt-4">
             <AttendanceEditor employee={employee!} scheduledTime={form.scheduled_check_in} />
           </TabsContent>
         </Tabs>
       ) : (
-        <ProfileFields form={form} setForm={setForm} departments={departments} isEdit={isEdit} isAdmin={isAdmin} />
+        <ProfileFields form={form} setForm={setForm} departments={departments} isEdit={isEdit} isAdmin={isAdmin} teamLeads={teamLeads} currentEmployeeId={undefined} />
       )}
 
       {(!isEdit || tab === "profile") && (
