@@ -140,10 +140,12 @@ export type Database = {
           exit_reason: string | null
           full_name: string
           id: string
+          is_team_lead: boolean
           joining_date: string | null
           phone: string | null
           scheduled_check_in: string
           status: Database["public"]["Enums"]["employee_status"]
+          team_lead_id: string | null
           updated_at: string
           user_id: string | null
         }
@@ -164,10 +166,12 @@ export type Database = {
           exit_reason?: string | null
           full_name: string
           id?: string
+          is_team_lead?: boolean
           joining_date?: string | null
           phone?: string | null
           scheduled_check_in?: string
           status?: Database["public"]["Enums"]["employee_status"]
+          team_lead_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -188,10 +192,12 @@ export type Database = {
           exit_reason?: string | null
           full_name?: string
           id?: string
+          is_team_lead?: boolean
           joining_date?: string | null
           phone?: string | null
           scheduled_check_in?: string
           status?: Database["public"]["Enums"]["employee_status"]
+          team_lead_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -201,6 +207,13 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_team_lead_id_fkey"
+            columns: ["team_lead_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
         ]
@@ -558,6 +571,7 @@ export type Database = {
         Returns: boolean
       }
       is_task_participant: { Args: { _task_id: string }; Returns: boolean }
+      is_team_lead_of: { Args: { _employee_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "hr" | "employee"
