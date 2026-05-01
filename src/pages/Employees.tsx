@@ -267,6 +267,8 @@ function EmployeeDialog({
     setSaving(true);
     try {
       if (isEdit) {
+        // Order matters: clearing is_team_lead while reports still point to this person would orphan them.
+        // Admin/HR are responsible for reassigning before un-marking; trigger only blocks self/invalid lead.
         const payload: any = {
           full_name: form.full_name.trim(),
           email: form.email.trim().toLowerCase(),
@@ -277,6 +279,8 @@ function EmployeeDialog({
           joining_date: form.joining_date || null,
           status: form.status,
           scheduled_check_in: `${form.scheduled_check_in}:00`,
+          is_team_lead: form.is_team_lead,
+          team_lead_id: form.team_lead_id || null,
         };
         const { error } = await supabase.from("employees").update(payload).eq("id", employee!.id);
         if (error) throw error;
