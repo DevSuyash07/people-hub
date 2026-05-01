@@ -23,6 +23,7 @@ const navByRole = {
   admin: [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/tasks", label: "My Tasks", icon: CheckSquare },
+    { to: "/my-team", label: "My Team", icon: Users2 },
     { to: "/employees", label: "Employees", icon: Users },
     { to: "/departments", label: "Departments", icon: Building2 },
     { to: "/attendance", label: "Attendance", icon: Clock },
@@ -35,6 +36,7 @@ const navByRole = {
   hr: [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/tasks", label: "My Tasks", icon: CheckSquare },
+    { to: "/my-team", label: "My Team", icon: Users2 },
     { to: "/employees", label: "Employees", icon: Users },
     { to: "/departments", label: "Departments", icon: Building2 },
     { to: "/attendance", label: "Attendance", icon: Clock },
@@ -52,6 +54,8 @@ const navByRole = {
     { to: "/profile", label: "My Profile", icon: UserCircle },
   ],
 } as const;
+
+const teamLeadItem = { to: "/my-team", label: "My Team", icon: Users2 };
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { user, role, signOut } = useAuth();
