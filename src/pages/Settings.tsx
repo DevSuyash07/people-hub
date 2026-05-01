@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Shield, Trash2, UserPlus } from "lucide-react";
+import { Shield, Trash2, UserPlus, Crown, Users } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface UserWithRole {
   user_id: string;
