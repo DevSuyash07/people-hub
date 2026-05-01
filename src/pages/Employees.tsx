@@ -154,7 +154,14 @@ export default function Employees() {
                     {e.full_name?.[0]?.toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <div className="font-medium truncate">{e.full_name}</div>
+                    <div className="font-medium truncate flex items-center gap-2">
+                      {e.full_name}
+                      {e.is_team_lead && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5">
+                          <Crown className="h-2.5 w-2.5" /> Lead
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-muted-foreground truncate flex items-center gap-3 mt-0.5">
                       <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{e.email}</span>
                       {e.phone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{e.phone}</span>}
@@ -164,6 +171,9 @@ export default function Employees() {
                 <div className="hidden sm:flex flex-col items-end text-xs text-muted-foreground gap-1">
                   <span>{e.designation || "—"}</span>
                   <span>{e.department?.name || "Unassigned"}</span>
+                  {e.team_lead?.full_name && (
+                    <span className="text-[11px]">↳ {e.team_lead.full_name}</span>
+                  )}
                 </div>
                 <StatusPill status={e.status} />
                 {isAdmin && (
