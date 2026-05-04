@@ -83,7 +83,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
       : baseItems;
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="min-h-screen flex flex-col w-full bg-background">
+      <ProjectMarquee />
+      <div className="flex flex-1 w-full">
       {/* Sidebar */}
       <aside className="hidden md:flex w-64 flex-col border-r border-sidebar-border bg-sidebar">
         <div className="px-6 py-6 border-b border-sidebar-border">
@@ -174,6 +176,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           {children}
         </div>
       </main>
+      </div>
     </div>
   );
 }
