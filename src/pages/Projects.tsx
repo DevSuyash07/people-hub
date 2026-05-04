@@ -272,7 +272,7 @@ export default function Projects() {
       <PageHeader
         title="Projects"
         description="Client websites, plans, and assigned team members."
-        action={
+        actions={
           canManage && (
             <Button onClick={openNew}>
               <Plus className="h-4 w-4" /> New project
