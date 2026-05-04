@@ -13,11 +13,13 @@ import {
   BarChart3,
   CheckSquare,
   Users2,
+  Briefcase,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReactNode, useEffect, useState } from "react";
 import logo from "@/assets/logo.svg";
 import { supabase } from "@/integrations/supabase/client";
+import { ProjectMarquee } from "@/components/ProjectMarquee";
 
 const navByRole = {
   admin: [
