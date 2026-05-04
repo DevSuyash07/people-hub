@@ -389,6 +389,174 @@ export type Database = {
         }
         Relationships: []
       }
+      project_members: {
+        Row: {
+          created_at: string
+          employee_id: string
+          id: string
+          project_id: string
+          role: string | null
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          id?: string
+          project_id: string
+          role?: string | null
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          id?: string
+          project_id?: string
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_notification_dismissals: {
+        Row: {
+          created_at: string
+          id: string
+          notification_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notification_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notification_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_notification_dismissals_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "project_notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_notifications: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          message: string
+          project_id: string
+          type: Database["public"]["Enums"]["project_notification_type"]
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          message: string
+          project_id: string
+          type: Database["public"]["Enums"]["project_notification_type"]
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          message?: string
+          project_id?: string
+          type?: Database["public"]["Enums"]["project_notification_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_notifications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          additional_info: string | null
+          business_summary: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          keywords_date: string | null
+          monthly_reporting_day: number | null
+          phone: string | null
+          plan: Database["public"]["Enums"]["project_plan"]
+          social_facebook: string | null
+          social_instagram: string | null
+          social_linkedin: string | null
+          social_other: string | null
+          social_twitter: string | null
+          social_youtube: string | null
+          start_date: string | null
+          status: Database["public"]["Enums"]["project_status"]
+          updated_at: string
+          website_name: string
+          website_url: string | null
+        }
+        Insert: {
+          additional_info?: string | null
+          business_summary?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          keywords_date?: string | null
+          monthly_reporting_day?: number | null
+          phone?: string | null
+          plan?: Database["public"]["Enums"]["project_plan"]
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_other?: string | null
+          social_twitter?: string | null
+          social_youtube?: string | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["project_status"]
+          updated_at?: string
+          website_name: string
+          website_url?: string | null
+        }
+        Update: {
+          additional_info?: string | null
+          business_summary?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          keywords_date?: string | null
+          monthly_reporting_day?: number | null
+          phone?: string | null
+          plan?: Database["public"]["Enums"]["project_plan"]
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_other?: string | null
+          social_twitter?: string | null
+          social_youtube?: string | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["project_status"]
+          updated_at?: string
+          website_name?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       task_attachments: {
         Row: {
           created_at: string
@@ -570,6 +738,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_or_lead: { Args: { _user_id: string }; Returns: boolean }
       is_task_participant: { Args: { _task_id: string }; Returns: boolean }
       is_team_lead_of: { Args: { _employee_id: string }; Returns: boolean }
     }
@@ -591,6 +760,9 @@ export type Database = {
         | "announcement"
         | "other"
       leave_status: "pending" | "approved" | "rejected" | "cancelled"
+      project_notification_type: "hold" | "new" | "reactivated"
+      project_plan: "silver" | "gold" | "platinum" | "diamond" | "custom"
+      project_status: "active" | "hold"
       task_priority: "low" | "medium" | "high"
       task_status: "pending" | "in_progress" | "completed"
     }
@@ -739,6 +911,9 @@ export const Constants = {
         "other",
       ],
       leave_status: ["pending", "approved", "rejected", "cancelled"],
+      project_notification_type: ["hold", "new", "reactivated"],
+      project_plan: ["silver", "gold", "platinum", "diamond", "custom"],
+      project_status: ["active", "hold"],
       task_priority: ["low", "medium", "high"],
       task_status: ["pending", "in_progress", "completed"],
     },

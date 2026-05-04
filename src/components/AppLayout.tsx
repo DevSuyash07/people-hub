@@ -13,17 +13,20 @@ import {
   BarChart3,
   CheckSquare,
   Users2,
+  Briefcase,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReactNode, useEffect, useState } from "react";
 import logo from "@/assets/logo.svg";
 import { supabase } from "@/integrations/supabase/client";
+import { ProjectMarquee } from "@/components/ProjectMarquee";
 
 const navByRole = {
   admin: [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/tasks", label: "My Tasks", icon: CheckSquare },
     { to: "/my-team", label: "My Team", icon: Users2 },
+    { to: "/projects", label: "Projects", icon: Briefcase },
     { to: "/employees", label: "Employees", icon: Users },
     { to: "/departments", label: "Departments", icon: Building2 },
     { to: "/attendance", label: "Attendance", icon: Clock },
@@ -48,6 +51,7 @@ const navByRole = {
   employee: [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/tasks", label: "My Tasks", icon: CheckSquare },
+    { to: "/projects", label: "Projects", icon: Briefcase },
     { to: "/attendance", label: "Attendance", icon: Clock },
     { to: "/leave", label: "Leave", icon: CalendarDays },
     { to: "/calendar", label: "Calendar", icon: CalendarRange },
@@ -79,7 +83,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
       : baseItems;
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="min-h-screen flex flex-col w-full bg-background">
+      <ProjectMarquee />
+      <div className="flex flex-1 w-full">
       {/* Sidebar */}
       <aside className="hidden md:flex w-64 flex-col border-r border-sidebar-border bg-sidebar">
         <div className="px-6 py-6 border-b border-sidebar-border">
@@ -170,6 +176,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           {children}
         </div>
       </main>
+      </div>
     </div>
   );
 }
