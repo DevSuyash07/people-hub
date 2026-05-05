@@ -70,29 +70,27 @@ export function ProjectMarquee() {
 
   if (!enabled || items.length === 0) return null;
 
-  // Show one at a time (latest), with close. Multiple stack vertically.
+  // Only show the single latest notification.
+  const n = items[0];
   return (
     <div className="sticky top-0 z-40 flex flex-col">
-      {items.map((n) => (
-        <div
-          key={n.id}
-          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium border-b border-black/10 ${typeStyle[n.type]}`}
-        >
-          <Megaphone className="h-3.5 w-3.5 shrink-0" />
-          <div className="flex-1 overflow-hidden">
-            <div className="whitespace-nowrap animate-[marquee_25s_linear_infinite]">
-              {n.message}
-            </div>
+      <div
+        className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium border-b border-black/10 ${typeStyle[n.type]}`}
+      >
+        <Megaphone className="h-3.5 w-3.5 shrink-0" />
+        <div className="flex-1 overflow-hidden">
+          <div className="whitespace-nowrap animate-[marquee_25s_linear_infinite]">
+            {n.message}
           </div>
-          <button
-            aria-label="Dismiss"
-            onClick={() => dismiss(n.id)}
-            className="shrink-0 rounded-sm p-0.5 hover:bg-black/20 transition-colors"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
         </div>
-      ))}
+        <button
+          aria-label="Dismiss"
+          onClick={() => dismiss(n.id)}
+          className="shrink-0 rounded-sm p-0.5 hover:bg-black/20 transition-colors"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
     </div>
   );
 }
