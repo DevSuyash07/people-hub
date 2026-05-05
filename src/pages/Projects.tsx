@@ -88,12 +88,14 @@ export default function Projects() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [members, setMembers] = useState<Record<string, string[]>>({}); // projectId -> employeeIds
   const [isLead, setIsLead] = useState(false);
+  const [myEmployeeId, setMyEmployeeId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [memberSel, setMemberSel] = useState<string[]>([]);
   const [filter, setFilter] = useState<"all" | Status>("all");
   const [loading, setLoading] = useState(true);
+  const [chatProject, setChatProject] = useState<Project | null>(null);
 
   useEffect(() => {
     document.title = "Projects · Digi Captain CRM";
