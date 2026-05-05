@@ -35,35 +35,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchRole(session.user.id);
-      } else {
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          fetchRole(session.user.id);
+        } else {
+          setLoading(false);
+        }
+      })
+      .catch((error) => {
+        console.error("Supabase getSession failed", error);
         setLoading(false);
-      }
-    });
+      });
 
     return () => sub.subscription.unsubscribe();
   }, []);
 
   async function fetchRole(userId: string) {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    if (data && data.length) {
-      // Highest priority wins
-      const ranks: Record<AppRole, number> = { admin: 1, hr: 2, employee: 3 };
-      const best = data
-        .map((r) => r.role as AppRole)
-        .sort((a, b) => ranks[a] - ranks[b])[0];
-      setRole(best);
-    } else {
+    try {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+
+      if (error) {
+        console.error("Failed to fetch user role", error);
+        setRole("employee");
+        return;
+      }
+
+      if (data && data.length) {
+        // Highest priority wins
+        const ranks: Record<AppRole, number> = { admin: 1, hr: 2, employee: 3 };
+        const best = data
+          .map((r) => r.role as AppRole)
+          .sort((a, b) => ranks[a] - ranks[b])[0];
+        setRole(best);
+      } else {
+        setRole("employee");
+      }
+    } catch (error) {
+      console.error("Unexpected error fetching role", error);
       setRole("employee");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   async function signOut() {
