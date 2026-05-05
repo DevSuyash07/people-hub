@@ -130,6 +130,36 @@ export default function Projects() {
       map[m.project_id].push(m.employee_id);
     });
     setMembers(map);
+
+    // Unread counts
+    if (user) {
+      const projectIds = (pr ?? []).map((p: any) => p.id);
+      const { data: me } = await supabase.from("employees").select("id").eq("user_id", user.id).maybeSingle();
+      const [{ data: msgs }, { data: reads }] = await Promise.all([
+        supabase
+          .from("project_messages")
+          .select("project_id, created_at, sender_id")
+          .in("project_id", projectIds)
+          .order("created_at", { ascending: false })
+          .limit(2000),
+        supabase
+          .from("project_chat_reads")
+          .select("project_id, last_read_at")
+          .eq("user_id", user.id)
+          .in("project_id", projectIds),
+      ]);
+      const readMap: Record<string, string> = {};
+      (reads ?? []).forEach((r: any) => { readMap[r.project_id] = r.last_read_at; });
+      const u: Record<string, number> = {};
+      (msgs ?? []).forEach((m: any) => {
+        if (m.sender_id === me?.id) return;
+        const lr = readMap[m.project_id];
+        if (!lr || new Date(m.created_at) > new Date(lr)) {
+          u[m.project_id] = (u[m.project_id] ?? 0) + 1;
+        }
+      });
+      setUnread(u);
+    }
     setLoading(false);
   }
 
