@@ -19,6 +19,7 @@ import Reports from "./pages/Reports.tsx";
 import Tasks from "./pages/Tasks.tsx";
 import MyTeam from "./pages/MyTeam.tsx";
 import Projects from "./pages/Projects.tsx";
+import MyChats from "./pages/MyChats.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
