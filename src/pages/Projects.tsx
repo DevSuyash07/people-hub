@@ -107,10 +107,11 @@ export default function Projects() {
   async function checkLead() {
     const { data } = await supabase
       .from("employees")
-      .select("is_team_lead")
+      .select("id, is_team_lead")
       .eq("user_id", user!.id)
       .maybeSingle();
     setIsLead(!!data?.is_team_lead);
+    setMyEmployeeId(data?.id ?? null);
   }
 
   async function load() {
