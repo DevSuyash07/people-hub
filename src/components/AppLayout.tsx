@@ -28,6 +28,7 @@ const navByRole = {
     { to: "/tasks", label: "My Tasks", icon: CheckSquare },
     { to: "/my-team", label: "My Team", icon: Users2 },
     { to: "/projects", label: "Projects", icon: Briefcase },
+    { to: "/my-chats", label: "My Chats", icon: MessageSquare },
     { to: "/employees", label: "Employees", icon: Users },
     { to: "/departments", label: "Departments", icon: Building2 },
     { to: "/attendance", label: "Attendance", icon: Clock },
