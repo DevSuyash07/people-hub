@@ -123,11 +123,18 @@ export default function MyChats() {
                     {last ? last.body : "No messages yet"}
                   </div>
                 </div>
-                {last && (
-                  <div className="text-[10px] text-muted-foreground whitespace-nowrap">
-                    {formatDistanceToNow(new Date(last.created_at), { addSuffix: true })}
-                  </div>
-                )}
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  {last && (
+                    <div className="text-[10px] text-muted-foreground whitespace-nowrap">
+                      {formatDistanceToNow(new Date(last.created_at), { addSuffix: true })}
+                    </div>
+                  )}
+                  {unread[p.id] > 0 && (
+                    <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center">
+                      {unread[p.id]}
+                    </span>
+                  )}
+                </div>
               </button>
             );
           })}
