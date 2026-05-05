@@ -389,6 +389,27 @@ export type Database = {
         }
         Relationships: []
       }
+      project_chat_reads: {
+        Row: {
+          id: string
+          last_read_at: string
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_read_at?: string
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_read_at?: string
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       project_members: {
         Row: {
           created_at: string

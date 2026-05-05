@@ -55,6 +55,10 @@ export function ProjectChat({
       setEmployees(map);
       setMessages((msgs ?? []) as Msg[]);
       setLoading(false);
+      // Mark as read
+      await supabase
+        .from("project_chat_reads")
+        .upsert({ user_id: user.id, project_id: projectId, last_read_at: new Date().toISOString() }, { onConflict: "user_id,project_id" });
     })();
 
     const channel = supabase
@@ -73,6 +77,10 @@ export function ProjectChat({
               ? prev
               : [...prev, payload.new as Msg],
           );
+          // Keep read marker fresh while chat is open
+          supabase
+            .from("project_chat_reads")
+            .upsert({ user_id: user.id, project_id: projectId, last_read_at: new Date().toISOString() }, { onConflict: "user_id,project_id" });
         },
       )
       .subscribe();

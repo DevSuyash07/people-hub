@@ -16,6 +16,7 @@ export default function MyChats() {
   const { user, role } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [lastMsgs, setLastMsgs] = useState<Record<string, LastMsg>>({});
+  const [unread, setUnread] = useState<Record<string, number>>({});
   const [active, setActive] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -50,18 +51,39 @@ export default function MyChats() {
 
     const { data: prs } = await projQuery.order("website_name");
     setProjects((prs ?? []) as Project[]);
+    const projectIds = (prs ?? []).map((p: any) => p.id);
 
-    const { data: msgs } = await supabase
-      .from("project_messages")
-      .select("project_id, body, created_at")
-      .in("project_id", (prs ?? []).map((p: any) => p.id))
-      .order("created_at", { ascending: false })
-      .limit(500);
-    const map: Record<string, LastMsg> = {};
+    const [{ data: msgs }, { data: reads }] = await Promise.all([
+      supabase
+        .from("project_messages")
+        .select("project_id, body, created_at, sender_id")
+        .in("project_id", projectIds)
+        .order("created_at", { ascending: false })
+        .limit(1000),
+      supabase
+        .from("project_chat_reads")
+        .select("project_id, last_read_at")
+        .eq("user_id", user!.id)
+        .in("project_id", projectIds),
+    ]);
+
+    const lastMap: Record<string, LastMsg> = {};
     (msgs ?? []).forEach((m: any) => {
-      if (!map[m.project_id]) map[m.project_id] = m;
+      if (!lastMap[m.project_id]) lastMap[m.project_id] = m;
     });
-    setLastMsgs(map);
+    setLastMsgs(lastMap);
+
+    const readMap: Record<string, string> = {};
+    (reads ?? []).forEach((r: any) => { readMap[r.project_id] = r.last_read_at; });
+    const unreadMap: Record<string, number> = {};
+    (msgs ?? []).forEach((m: any) => {
+      if (m.sender_id === me?.id) return;
+      const lr = readMap[m.project_id];
+      if (!lr || new Date(m.created_at) > new Date(lr)) {
+        unreadMap[m.project_id] = (unreadMap[m.project_id] ?? 0) + 1;
+      }
+    });
+    setUnread(unreadMap);
     setLoading(false);
   }
 
@@ -101,18 +123,25 @@ export default function MyChats() {
                     {last ? last.body : "No messages yet"}
                   </div>
                 </div>
-                {last && (
-                  <div className="text-[10px] text-muted-foreground whitespace-nowrap">
-                    {formatDistanceToNow(new Date(last.created_at), { addSuffix: true })}
-                  </div>
-                )}
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  {last && (
+                    <div className="text-[10px] text-muted-foreground whitespace-nowrap">
+                      {formatDistanceToNow(new Date(last.created_at), { addSuffix: true })}
+                    </div>
+                  )}
+                  {unread[p.id] > 0 && (
+                    <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center">
+                      {unread[p.id]}
+                    </span>
+                  )}
+                </div>
               </button>
             );
           })}
         </div>
       )}
 
-      <Dialog open={!!active} onOpenChange={(v) => !v && setActive(null)}>
+      <Dialog open={!!active} onOpenChange={(v) => { if (!v) { setActive(null); load(); } }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{active?.website_name} · Chat</DialogTitle>

@@ -57,17 +57,23 @@ Deno.serve(async (req) => {
       if (targetIsAdmin) return json({ error: "Cannot delete an admin account" }, 400);
     }
 
-    // Keep history: clear FK on attendance/leave by detaching employee_id?
-    // employee_id is required on those tables, so we keep them intact and
-    // delete only the employees row + roles + auth user. The historical rows
-    // stay queryable by employee_id (orphaned but safe).
+    // Hard delete: remove all dependent rows first, then the employee, then the auth user.
     if (emp.user_id) {
       await admin.from("user_roles").delete().eq("user_id", emp.user_id);
     }
-    // Set employee status to terminated and unlink from auth so the row stays for history.
-    await admin.from("employees")
-      .update({ status: "terminated", user_id: null, exit_date: new Date().toISOString().slice(0, 10) })
-      .eq("id", employee_id);
+    await admin.from("project_members").delete().eq("employee_id", employee_id);
+    await admin.from("project_messages").delete().eq("sender_id", employee_id);
+    await admin.from("task_comments").delete().eq("author_id", employee_id);
+    await admin.from("task_attachments").delete().eq("uploaded_by", employee_id);
+    await admin.from("tasks").delete().or(`assigned_to.eq.${employee_id},assigned_by.eq.${employee_id}`);
+    await admin.from("attendance").delete().eq("employee_id", employee_id);
+    await admin.from("leave_requests").delete().eq("employee_id", employee_id);
+    await admin.from("leave_balances").delete().eq("employee_id", employee_id);
+    // Detach reports from this lead so the FK-style validation trigger doesn't block.
+    await admin.from("employees").update({ team_lead_id: null }).eq("team_lead_id", employee_id);
+
+    const { error: empDelErr } = await admin.from("employees").delete().eq("id", employee_id);
+    if (empDelErr) return json({ error: `Employee deletion failed: ${empDelErr.message}` }, 400);
 
     if (emp.user_id) {
       const { error: delErr } = await admin.auth.admin.deleteUser(emp.user_id);
