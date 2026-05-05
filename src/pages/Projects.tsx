@@ -87,6 +87,7 @@ export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [members, setMembers] = useState<Record<string, string[]>>({}); // projectId -> employeeIds
+  const [unread, setUnread] = useState<Record<string, number>>({});
   const [isLead, setIsLead] = useState(false);
   const [myEmployeeId, setMyEmployeeId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
