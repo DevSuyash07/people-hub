@@ -421,6 +421,30 @@ export type Database = {
           },
         ]
       }
+      project_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          project_id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          project_id: string
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       project_notification_dismissals: {
         Row: {
           created_at: string
@@ -727,6 +751,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_project: { Args: { _project_id: string }; Returns: boolean }
       get_primary_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -739,6 +764,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin_or_lead: { Args: { _user_id: string }; Returns: boolean }
+      is_project_member: { Args: { _project_id: string }; Returns: boolean }
       is_task_participant: { Args: { _task_id: string }; Returns: boolean }
       is_team_lead_of: { Args: { _employee_id: string }; Returns: boolean }
     }
