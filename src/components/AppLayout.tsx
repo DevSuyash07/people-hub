@@ -14,6 +14,7 @@ import {
   CheckSquare,
   Users2,
   Briefcase,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReactNode, useEffect, useState } from "react";
