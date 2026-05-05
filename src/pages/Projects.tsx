@@ -20,7 +20,8 @@ import { Label } from "@/components/ui/label";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, Globe, Mail, Phone, Calendar as CalIcon, Users2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Globe, Mail, Phone, Calendar as CalIcon, Users2, MessageSquare } from "lucide-react";
+import { ProjectChat } from "@/components/ProjectChat";
 import { format } from "date-fns";
 import { z } from "zod";
 
