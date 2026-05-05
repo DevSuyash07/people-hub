@@ -396,6 +396,9 @@ export default function Projects() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" onClick={() => setChatProject(p)} title="Open chat">
+                          <MessageSquare className="h-4 w-4" />
+                        </Button>
                         {canManage && (
                           <Button variant="ghost" size="sm" onClick={() => openEdit(p)}>
                             <Pencil className="h-4 w-4" />
