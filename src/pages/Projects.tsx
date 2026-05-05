@@ -20,7 +20,8 @@ import { Label } from "@/components/ui/label";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, Globe, Mail, Phone, Calendar as CalIcon, Users2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Globe, Mail, Phone, Calendar as CalIcon, Users2, MessageSquare } from "lucide-react";
+import { ProjectChat } from "@/components/ProjectChat";
 import { format } from "date-fns";
 import { z } from "zod";
 
@@ -87,12 +88,14 @@ export default function Projects() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [members, setMembers] = useState<Record<string, string[]>>({}); // projectId -> employeeIds
   const [isLead, setIsLead] = useState(false);
+  const [myEmployeeId, setMyEmployeeId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [memberSel, setMemberSel] = useState<string[]>([]);
   const [filter, setFilter] = useState<"all" | Status>("all");
   const [loading, setLoading] = useState(true);
+  const [chatProject, setChatProject] = useState<Project | null>(null);
 
   useEffect(() => {
     document.title = "Projects · Digi Captain CRM";
@@ -104,10 +107,11 @@ export default function Projects() {
   async function checkLead() {
     const { data } = await supabase
       .from("employees")
-      .select("is_team_lead")
+      .select("id, is_team_lead")
       .eq("user_id", user!.id)
       .maybeSingle();
     setIsLead(!!data?.is_team_lead);
+    setMyEmployeeId(data?.id ?? null);
   }
 
   async function load() {
@@ -253,25 +257,38 @@ export default function Projects() {
     load();
   }
 
+  // Admin sees all projects; everyone else sees only projects they're a member of.
+  const visible = useMemo(() => {
+    if (role === "admin") return projects;
+    if (!myEmployeeId) return [];
+    return projects.filter((p) => (members[p.id] ?? []).includes(myEmployeeId));
+  }, [projects, members, role, myEmployeeId]);
+
   const filtered = useMemo(
-    () => (filter === "all" ? projects : projects.filter((p) => p.status === filter)),
-    [projects, filter],
+    () => (filter === "all" ? visible : visible.filter((p) => p.status === filter)),
+    [visible, filter],
   );
 
   const stats = useMemo(
     () => ({
-      total: projects.length,
-      active: projects.filter((p) => p.status === "active").length,
-      hold: projects.filter((p) => p.status === "hold").length,
+      total: visible.length,
+      active: visible.filter((p) => p.status === "active").length,
+      hold: visible.filter((p) => p.status === "hold").length,
     }),
-    [projects],
+    [visible],
   );
+
+  const pageTitle = role === "admin" ? "Projects" : "My Projects";
 
   return (
     <AppLayout>
       <PageHeader
-        title="Projects"
-        description="Client websites, plans, and assigned team members."
+        title={pageTitle}
+        description={
+          role === "admin"
+            ? "All client websites, plans, and assigned team members."
+            : "Projects you're assigned to."
+        }
         actions={
           canManage && (
             <Button onClick={openNew}>
@@ -379,6 +396,9 @@ export default function Projects() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" onClick={() => setChatProject(p)} title="Open chat">
+                          <MessageSquare className="h-4 w-4" />
+                        </Button>
                         {canManage && (
                           <Button variant="ghost" size="sm" onClick={() => openEdit(p)}>
                             <Pencil className="h-4 w-4" />
@@ -505,6 +525,18 @@ export default function Projects() {
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
             <Button onClick={save}>{editing ? "Save changes" : "Create project"}</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Chat dialog */}
+      <Dialog open={!!chatProject} onOpenChange={(v) => !v && setChatProject(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{chatProject?.website_name} · Chat</DialogTitle>
+          </DialogHeader>
+          {chatProject && (
+            <ProjectChat projectId={chatProject.id} projectName={chatProject.website_name} />
+          )}
         </DialogContent>
       </Dialog>
     </AppLayout>

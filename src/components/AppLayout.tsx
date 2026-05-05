@@ -14,6 +14,7 @@ import {
   CheckSquare,
   Users2,
   Briefcase,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReactNode, useEffect, useState } from "react";
@@ -27,6 +28,7 @@ const navByRole = {
     { to: "/tasks", label: "My Tasks", icon: CheckSquare },
     { to: "/my-team", label: "My Team", icon: Users2 },
     { to: "/projects", label: "Projects", icon: Briefcase },
+    { to: "/my-chats", label: "My Chats", icon: MessageSquare },
     { to: "/employees", label: "Employees", icon: Users },
     { to: "/departments", label: "Departments", icon: Building2 },
     { to: "/attendance", label: "Attendance", icon: Clock },
@@ -51,7 +53,8 @@ const navByRole = {
   employee: [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/tasks", label: "My Tasks", icon: CheckSquare },
-    { to: "/projects", label: "Projects", icon: Briefcase },
+    { to: "/projects", label: "My Projects", icon: Briefcase },
+    { to: "/my-chats", label: "My Chats", icon: MessageSquare },
     { to: "/attendance", label: "Attendance", icon: Clock },
     { to: "/leave", label: "Leave", icon: CalendarDays },
     { to: "/calendar", label: "Calendar", icon: CalendarRange },

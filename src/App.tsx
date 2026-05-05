@@ -19,6 +19,7 @@ import Reports from "./pages/Reports.tsx";
 import Tasks from "./pages/Tasks.tsx";
 import MyTeam from "./pages/MyTeam.tsx";
 import Projects from "./pages/Projects.tsx";
+import MyChats from "./pages/MyChats.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
             <Route path="/projects" element={<ProtectedRoute allow={["admin", "employee"]}><Projects /></ProtectedRoute>} />
+            <Route path="/my-chats" element={<ProtectedRoute allow={["admin", "employee"]}><MyChats /></ProtectedRoute>} />
             <Route path="/my-team" element={<ProtectedRoute><MyTeam /></ProtectedRoute>} />
             <Route path="/employees" element={<ProtectedRoute allow={["admin", "hr"]}><Employees /></ProtectedRoute>} />
             <Route path="/departments" element={<ProtectedRoute allow={["admin", "hr"]}><Departments /></ProtectedRoute>} />
