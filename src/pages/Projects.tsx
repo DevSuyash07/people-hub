@@ -565,7 +565,7 @@ export default function Projects() {
       </Dialog>
 
       {/* Chat dialog */}
-      <Dialog open={!!chatProject} onOpenChange={(v) => !v && setChatProject(null)}>
+      <Dialog open={!!chatProject} onOpenChange={(v) => { if (!v) { setChatProject(null); load(); } }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{chatProject?.website_name} · Chat</DialogTitle>
