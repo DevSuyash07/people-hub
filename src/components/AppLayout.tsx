@@ -25,8 +25,6 @@ import { ProjectMarquee } from "@/components/ProjectMarquee";
 const navByRole = {
   admin: [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { to: "/tasks", label: "My Tasks", icon: CheckSquare },
-    { to: "/my-team", label: "My Team", icon: Users2 },
     { to: "/projects", label: "Projects", icon: Briefcase },
     { to: "/my-chats", label: "My Chats", icon: MessageSquare },
     { to: "/employees", label: "Employees", icon: Users },

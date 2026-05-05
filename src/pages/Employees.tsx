@@ -196,9 +196,9 @@ export default function Employees() {
       <AlertDialog open={!!confirmDelete} onOpenChange={(v) => !v && setConfirmDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Permanently remove {confirmDelete?.full_name}?</AlertDialogTitle>
+            <AlertDialogTitle>Permanently delete {confirmDelete?.full_name}?</AlertDialogTitle>
             <AlertDialogDescription>
-              Their login will be revoked and they'll be marked terminated. Attendance and leave history are preserved for reports. This cannot be undone.
+              Their login, employee record, attendance, leave, tasks, and chat messages will be permanently removed. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
