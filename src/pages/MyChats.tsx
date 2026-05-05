@@ -141,7 +141,7 @@ export default function MyChats() {
         </div>
       )}
 
-      <Dialog open={!!active} onOpenChange={(v) => !v && setActive(null)}>
+      <Dialog open={!!active} onOpenChange={(v) => { if (!v) { setActive(null); load(); } }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{active?.website_name} · Chat</DialogTitle>
