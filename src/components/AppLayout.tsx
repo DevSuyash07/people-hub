@@ -53,7 +53,8 @@ const navByRole = {
   employee: [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/tasks", label: "My Tasks", icon: CheckSquare },
-    { to: "/projects", label: "Projects", icon: Briefcase },
+    { to: "/projects", label: "My Projects", icon: Briefcase },
+    { to: "/my-chats", label: "My Chats", icon: MessageSquare },
     { to: "/attendance", label: "Attendance", icon: Clock },
     { to: "/leave", label: "Leave", icon: CalendarDays },
     { to: "/calendar", label: "Calendar", icon: CalendarRange },
