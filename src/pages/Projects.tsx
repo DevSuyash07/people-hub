@@ -257,25 +257,38 @@ export default function Projects() {
     load();
   }
 
+  // Admin sees all projects; everyone else sees only projects they're a member of.
+  const visible = useMemo(() => {
+    if (role === "admin") return projects;
+    if (!myEmployeeId) return [];
+    return projects.filter((p) => (members[p.id] ?? []).includes(myEmployeeId));
+  }, [projects, members, role, myEmployeeId]);
+
   const filtered = useMemo(
-    () => (filter === "all" ? projects : projects.filter((p) => p.status === filter)),
-    [projects, filter],
+    () => (filter === "all" ? visible : visible.filter((p) => p.status === filter)),
+    [visible, filter],
   );
 
   const stats = useMemo(
     () => ({
-      total: projects.length,
-      active: projects.filter((p) => p.status === "active").length,
-      hold: projects.filter((p) => p.status === "hold").length,
+      total: visible.length,
+      active: visible.filter((p) => p.status === "active").length,
+      hold: visible.filter((p) => p.status === "hold").length,
     }),
-    [projects],
+    [visible],
   );
+
+  const pageTitle = role === "admin" ? "Projects" : "My Projects";
 
   return (
     <AppLayout>
       <PageHeader
-        title="Projects"
-        description="Client websites, plans, and assigned team members."
+        title={pageTitle}
+        description={
+          role === "admin"
+            ? "All client websites, plans, and assigned team members."
+            : "Projects you're assigned to."
+        }
         actions={
           canManage && (
             <Button onClick={openNew}>
